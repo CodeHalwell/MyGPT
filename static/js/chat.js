@@ -175,6 +175,8 @@ async function sendMessage(e) {
             if (event.data === '[DONE]') {
                 currentEventSource.close();
                 showLoading(false);
+                // Refresh the chat after response is complete
+                loadChat(currentChatId);
                 return;
             }
 
@@ -189,7 +191,6 @@ async function sendMessage(e) {
             
             // Immediately highlight any code blocks
             responseDiv.querySelectorAll('pre code').forEach((block) => {
-                // Reset the highlighted state
                 block.removeAttribute('data-highlighted');
                 hljs.highlightElement(block);
             });
