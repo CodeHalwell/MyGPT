@@ -1,8 +1,7 @@
-/* Container fluid styles */
+/* Update container fluid to use viewport height */
 .container-fluid {
     height: calc(100vh - 72px);  /* Account for navbar */
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    padding: 1rem 1rem 0 1rem;   /* Remove bottom padding */
 }
 
 /* Sidebar styles */
@@ -58,20 +57,22 @@
     opacity: 1;
 }
 
-/* Chat container styles */
+/* Update chat container to use full height */
 .chat-container {
     height: 100%;
     display: flex;
     flex-direction: column;
+    position: relative;  /* For absolute positioning of chat input */
 }
 
+/* Update chat messages container to account for chat input */
 .chat-messages {
     flex: 1;
     overflow-y: auto;
     padding: 1.5rem;
     background: var(--bs-dark);
-    border-radius: 0.5rem;
-    margin-bottom: 1rem;
+    border-radius: 0.5rem 0.5rem 0 0;  /* Rounded corners only on top */
+    margin-bottom: 0;  /* Remove margin */
 }
 
 /* Message styles */
@@ -138,17 +139,24 @@
     display: flex;
 }
 
-/* Chat input area */
+/* Update chat input to stick to bottom */
 .chat-input {
-    position: relative;
-    padding: 1rem;
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
     background: var(--bs-dark);
-    border-radius: 0.5rem;
+    border-radius: 0 0 0.5rem 0.5rem;  /* Rounded corners only on bottom */
+    padding: 1rem;
+    margin-top: auto;  /* Push to bottom */
+    border-top: 1px solid rgba(255, 255, 255, 0.1);  /* Subtle separator */
 }
 
+/* Ensure proper spacing in the input area */
 .chat-input form {
     display: flex;
     gap: 0.75rem;
+    margin-bottom: 0;  /* Remove any bottom margin */
 }
 
 .chat-input input {
@@ -180,7 +188,7 @@
     padding: 0.4rem 0.6rem;
 }
 
-/* Responsive adjustments */
+/* Update responsive styles */
 @media (max-width: 768px) {
     .container-fluid {
         height: calc(100vh - 80px);
@@ -197,5 +205,17 @@
     
     .message {
         max-width: 95%;
+    }
+
+    .chat-input {
+        position: fixed;  /* Fixed position on mobile */
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 0.75rem;  /* Slightly smaller padding on mobile */
+    }
+    
+    .chat-messages {
+        margin-bottom: 60px;  /* Account for fixed input height */
     }
 }
