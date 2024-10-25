@@ -20,8 +20,10 @@
     overflow-y: auto;
 }
 
+/* Make chat items wider and improve spacing */
 .chat-list-item {
     margin-bottom: 0.75rem;
+    width: 100%;  /* Ensure full width */
 }
 
 .chat-item {
@@ -29,6 +31,8 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     padding: 0.75rem 1rem;
+    width: 100%;  /* Make the chat item take full width */
+    display: block; /* Ensure block display */
 }
 
 .chat-item.active {
@@ -36,9 +40,16 @@
     border-color: var(--bs-primary);
 }
 
-/* Delete button styles */
+/* Ensure proper flex layout */
+.d-flex.align-items-center {
+    width: 100%;
+    gap: 0.5rem;  /* Add space between chat item and delete button */
+}
+
+/* Adjust the delete button to not interfere with width */
 .delete-chat-btn {
-    height: 100%;
+    margin-left: auto;  /* Push button to the right */
+    flex-shrink: 0;     /* Prevent button from shrinking */
     padding: 0.5rem 1rem;
     align-self: stretch;
     opacity: 0.7;
