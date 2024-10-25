@@ -13,16 +13,6 @@
     padding: 1rem;
     background: var(--bs-dark);
     border-radius: 0.1rem;
-    transition: all 0.3s ease;
-}
-
-.sidebar.collapsed {
-    width: 60px;
-    overflow: hidden;
-}
-
-.sidebar.collapsed .chat-item span {
-    display: none;
 }
 
 /* Chat list styles */
@@ -53,12 +43,7 @@
 
 /* Chat area styles */
 .chat-area {
-    transition: margin-left 0.3s ease;
     margin-left: 280px;
-}
-
-.chat-area.sidebar-collapsed {
-    margin-left: 60px;
 }
 
 /* Ensure proper flex layout */
@@ -220,13 +205,6 @@
     padding: 0.4rem 0.6rem;
 }
 
-/* Sidebar toggle styles */
-#sidebarToggle {
-    padding: 0.5rem;
-    font-size: 1.25rem;
-    line-height: 1;
-}
-
 /* Update responsive styles */
 @media (max-width: 768px) {
     .container-fluid {
@@ -240,20 +218,11 @@
         left: 0;
         bottom: 0;
         z-index: 1030;
-        transform: translateX(-100%);
-    }
-    
-    .sidebar.show {
-        transform: translateX(0);
     }
     
     .chat-area {
         width: 100%;
         padding: 1rem;
-        margin-left: 0;
-    }
-    
-    .chat-area.sidebar-collapsed {
         margin-left: 0;
     }
     
