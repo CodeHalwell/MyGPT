@@ -1,19 +1,33 @@
 import os
 from openai import OpenAI
-from typing import Iterator
+from typing import Iterator, List, Dict
+from openai.types.chat import ChatCompletionMessage, ChatCompletionMessageParam, ChatCompletionSystemMessageParam
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
-def get_ai_response_stream(messages) -> Iterator[str]:
-    formatted_messages = [
+def get_ai_response_stream(messages: List[Dict[str, str]]) -> Iterator[str]:
+    formatted_messages: List[ChatCompletionMessageParam] = [
         {"role": m.role, "content": m.content}
         for m in messages
     ]
     
-    system_message = {
+    system_message: ChatCompletionSystemMessageParam = {
         "role": "system",
-        "content": "When providing code examples, always format them properly with triple backticks and language specification."
+        "content": '''You are a helpful assistant that writes clean, well-formatted code. When providing code examples:
+1. Always start with triple backticks and the language name on its own line
+2. Put the code on the next line after the language specification
+3. Put the closing triple backticks on a new line
+4. Format your response like this:
+
+Here's how you can do it:
+
+```python
+def example():
+    pass
+```
+
+Never put code on the same line as the backticks or language specification.'''
     }
     formatted_messages.insert(0, system_message)
     
@@ -59,8 +73,8 @@ def get_ai_response_stream(messages) -> Iterator[str]:
                 # Keep the rest in the buffer
                 buffer = buffer[end + 3:]
 
-def get_ai_response(messages):
-    formatted_messages = [
+def get_ai_response(messages: List[Dict[str, str]]) -> str:
+    formatted_messages: List[ChatCompletionMessageParam] = [
         {"role": m.role, "content": m.content}
         for m in messages
     ]
@@ -70,18 +84,18 @@ def get_ai_response(messages):
         messages=formatted_messages
     )
     
-    return response.choices[0].message.content
+    return response.choices[0].message.content or ""
 
-def generate_chat_summary(messages) -> str:
+def generate_chat_summary(messages: List[Dict[str, str]]) -> str:
     if not messages:
         return "New Chat"
         
-    formatted_messages = [
+    formatted_messages: List[ChatCompletionMessageParam] = [
         {"role": m.role, "content": m.content}
         for m in messages
     ]
     
-    summary_prompt = {
+    summary_prompt: ChatCompletionSystemMessageParam = {
         "role": "system",
         "content": "Please provide a brief summary (max 50 characters) of the following conversation. Focus on the main topic or question being discussed."
     }
@@ -91,4 +105,4 @@ def generate_chat_summary(messages) -> str:
         messages=[summary_prompt] + formatted_messages
     )
     
-    return response.choices[0].message.content
+    return response.choices[0].message.content or ""
