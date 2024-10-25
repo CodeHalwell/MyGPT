@@ -18,6 +18,9 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
+            <button id="sidebarToggle" class="btn btn-outline-secondary d-lg-none me-2">
+                <i class="bi bi-list"></i>
+            </button>
             <a class="navbar-brand" href="{{ url_for('index') }}">AI Chat Assistant</a>
             {% if current_user.is_authenticated %}
             <div class="navbar-nav ms-auto">

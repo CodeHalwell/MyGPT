@@ -8,12 +8,40 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatMessages = document.getElementById('chatMessages');
     const chatItems = document.querySelectorAll('.chat-item');
     const deleteChatBtns = document.querySelectorAll('.delete-chat-btn');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.getElementById('sidebar');
 
     // Initialize highlight.js
     hljs.configure({
         ignoreUnescapedHTML: true
     });
     hljs.highlightAll();
+
+    // Sidebar toggle functionality
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('show');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !sidebarToggle.contains(e.target) &&
+                sidebar.classList.contains('show')) {
+                sidebar.classList.remove('show');
+            }
+        });
+    }
+
+    // Close sidebar when selecting a chat on mobile
+    chatItems.forEach(item => {
+        item.addEventListener('click', () => {
+            if (window.innerWidth <= 768 && sidebar.classList.contains('show')) {
+                sidebar.classList.remove('show');
+            }
+        });
+    });
 
     newChatBtn.addEventListener('click', createNewChat);
     messageForm.addEventListener('submit', sendMessage);
@@ -73,7 +101,7 @@ async function createNewChat() {
         const data = await response.json();
         console.log('New chat created:', data);
         currentChatId = data.chat_id;
-        location.reload(); // Keep this for new chat creation as we need to update the sidebar
+        location.reload();
     } catch (error) {
         showError('Failed to create new chat: ' + error.message);
     } finally {
