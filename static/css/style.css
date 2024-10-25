@@ -74,3 +74,27 @@
 .error-message.visible {
     display: block;
 }
+
+/* Chat list styles */
+.chat-list-item {
+    margin-bottom: 0.5rem;
+}
+
+.chat-item {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.delete-chat-btn {
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.delete-chat-btn:hover {
+    opacity: 1;
+}
+
+.chat-list-item:hover .delete-chat-btn {
+    opacity: 1;
+}

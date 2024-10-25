@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const messageForm = document.getElementById('messageForm');
     const chatMessages = document.getElementById('chatMessages');
     const chatItems = document.querySelectorAll('.chat-item');
+    const deleteChatBtns = document.querySelectorAll('.delete-chat-btn');
 
     newChatBtn.addEventListener('click', createNewChat);
     messageForm.addEventListener('submit', sendMessage);
@@ -14,6 +15,12 @@ document.addEventListener('DOMContentLoaded', function() {
         item.addEventListener('click', (e) => {
             e.preventDefault();
             loadChat(item.dataset.chatId);
+        });
+    });
+    deleteChatBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteChat(btn.dataset.chatId);
         });
     });
 
@@ -127,13 +134,8 @@ async function sendMessage(e) {
     showLoading();
 
     try {
-        // Close any existing SSE connection
-        if (currentEventSource) {
-            currentEventSource.close();
-        }
-
-        // First, send the message using POST
-        const response = await fetch(`/chat/${currentChatId}/message`, {
+        // First, save the message
+        const saveResponse = await fetch(`/chat/${currentChatId}/message`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -141,12 +143,17 @@ async function sendMessage(e) {
             body: JSON.stringify({ message })
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to send message');
+        if (!saveResponse.ok) {
+            throw new Error('Failed to save message');
+        }
+
+        // Close any existing SSE connection
+        if (currentEventSource) {
+            currentEventSource.close();
         }
 
         // Set up SSE connection for streaming response
-        currentEventSource = new EventSource(`/chat/${currentChatId}/message`);
+        currentEventSource = new EventSource(`/chat/${currentChatId}/message/stream`);
         let assistantResponse = '';
         let responseDiv = null;
 
@@ -178,6 +185,39 @@ async function sendMessage(e) {
     } catch (error) {
         showError('Failed to send message: ' + error.message);
         showLoading(false);
+    }
+}
+
+async function deleteChat(chatId) {
+    if (!confirm('Are you sure you want to delete this chat?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/chat/${chatId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete chat');
+        }
+
+        // If the deleted chat was the current chat, clear the messages
+        if (currentChatId === chatId) {
+            document.getElementById('chatMessages').innerHTML = '';
+            currentChatId = null;
+        }
+
+        // Remove the chat from the sidebar
+        const chatItem = document.querySelector(`.chat-list-item[data-chat-id="${chatId}"]`);
+        if (chatItem) {
+            chatItem.remove();
+        }
+    } catch (error) {
+        showError('Failed to delete chat: ' + error.message);
     }
 }
 
