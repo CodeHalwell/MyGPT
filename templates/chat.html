@@ -9,9 +9,14 @@
         </div>
         <div class="list-group">
             {% for chat in chats %}
-            <a href="#" class="list-group-item list-group-item-action chat-item" data-chat-id="{{ chat.id }}">
-                {{ chat.title or 'New Chat' }}
-            </a>
+            <div class="d-flex align-items-center chat-list-item">
+                <a href="#" class="list-group-item list-group-item-action chat-item flex-grow-1" data-chat-id="{{ chat.id }}">
+                    {{ chat.title or 'New Chat' }}
+                </a>
+                <button class="btn btn-sm btn-outline-danger delete-chat-btn ms-2" data-chat-id="{{ chat.id }}">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
             {% endfor %}
         </div>
     </div>
@@ -40,6 +45,8 @@
     </div>
 </div>
 
+<!-- Add Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
 <!-- Add custom CSS -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 <script src="{{ url_for('static', filename='js/chat.js') }}"></script>

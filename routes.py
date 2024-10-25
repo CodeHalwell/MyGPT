@@ -82,13 +82,19 @@ def send_message(chat_id):
     user_message.content = content
     user_message.role = 'user'
     db.session.add(user_message)
-    db.session.flush()
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
+@app.route('/chat/<int:chat_id>/message/stream')
+@login_required
+def stream_message(chat_id):
+    chat = Chat.query.get_or_404(chat_id)
+    if chat.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
 
     def generate():
         try:
-            # Send SSE headers
-            yield 'event: message\n'
-            
             messages = Message.query.filter_by(chat_id=chat_id).order_by(Message.timestamp).all()
             accumulated_response = []
             
@@ -114,7 +120,7 @@ def send_message(chat_id):
             yield f'data: error: {str(e)}\n\n'
             yield 'data: [DONE]\n\n'
 
-    response = Response(
+    return Response(
         stream_with_context(generate()),
         mimetype='text/event-stream',
         headers={
@@ -123,7 +129,6 @@ def send_message(chat_id):
             'X-Accel-Buffering': 'no'
         }
     )
-    return response
 
 @app.route('/chat/<int:chat_id>/messages')
 @login_required
@@ -146,3 +151,14 @@ def get_chat_title(chat_id):
     if chat.user_id != current_user.id:
         return jsonify({'error': 'Unauthorized'}), 403
     return jsonify({'title': chat.title})
+
+@app.route('/chat/<int:chat_id>/delete', methods=['POST'])
+@login_required
+def delete_chat(chat_id):
+    chat = Chat.query.get_or_404(chat_id)
+    if chat.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    Message.query.filter_by(chat_id=chat_id).delete()
+    db.session.delete(chat)
+    db.session.commit()
+    return jsonify({'success': True})
