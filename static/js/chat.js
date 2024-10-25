@@ -48,8 +48,7 @@ function showLoading(show = true) {
 function showError(message) {
     console.error('Error:', message);
     const errorDiv = document.getElementById('errorMessage');
-    const errorSpan = errorDiv.querySelector('span');
-    errorSpan.textContent = message;
+    errorDiv.textContent = message;
     errorDiv.classList.add('visible');
     setTimeout(() => {
         errorDiv.classList.remove('visible');
@@ -57,6 +56,8 @@ function showError(message) {
 }
 
 async function createNewChat() {
+    console.log('Creating new chat');
+    showLoading();
     try {
         const response = await fetch('/chat/new', {
             method: 'POST',
@@ -64,21 +65,54 @@ async function createNewChat() {
                 'Content-Type': 'application/json'
             }
         });
-
+        
         if (!response.ok) {
             throw new Error('Failed to create new chat');
         }
-
+        
         const data = await response.json();
-        window.location.reload();
+        console.log('New chat created:', data);
+        currentChatId = data.chat_id;
+        location.reload(); // Keep this for new chat creation as we need to update the sidebar
     } catch (error) {
-        showError(error.message);
+        showError('Failed to create new chat: ' + error.message);
+    } finally {
+        showLoading(false);
     }
 }
 
 async function loadChat(chatId) {
+    console.log('Loading chat:', chatId);
+    if (currentEventSource) {
+        currentEventSource.close();
+    }
+    
+    currentChatId = chatId;
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.innerHTML = '';
+    showLoading();
+
     try {
-        // Update active state
+        const response = await fetch(`/chat/${chatId}/messages`);
+        if (!response.ok) {
+            throw new Error('Failed to load chat messages');
+        }
+        
+        const messages = await response.json();
+        console.log('Loaded messages:', messages);
+        messages.forEach(message => {
+            appendMessage(message.content, message.role);
+        });
+
+        // Apply syntax highlighting to code blocks
+        document.querySelectorAll('pre code').forEach((block) => {
+            block.removeAttribute('data-highlighted');
+            hljs.highlightElement(block);
+        });
+
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Update active state in sidebar
         document.querySelectorAll('.chat-item').forEach(item => {
             item.classList.remove('active');
             if (item.dataset.chatId === chatId) {
@@ -86,25 +120,109 @@ async function loadChat(chatId) {
             }
         });
 
-        currentChatId = chatId;
-
-        // Load messages
-        const response = await fetch(`/chat/${chatId}/messages`);
-        if (!response.ok) {
-            throw new Error('Failed to load messages');
-        }
-
-        const messages = await response.json();
-        displayMessages(messages);
-
         // Update chat title
-        const titleResponse = await fetch(`/chat/${chatId}/title`);
-        if (titleResponse.ok) {
-            const titleData = await titleResponse.json();
-            updateChatTitle(titleData.title, titleData.tags);
-        }
+        await updateChatTitle(chatId);
     } catch (error) {
-        showError(error.message);
+        showError('Failed to load chat: ' + error.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function sendMessage(e) {
+    e.preventDefault();
+    console.log('Sending message');
+    
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput.value.trim();
+    if (!message) return;
+
+    // If no chat is selected, create a new one first
+    if (!currentChatId) {
+        try {
+            const response = await fetch('/chat/new', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to create new chat');
+            }
+            
+            const data = await response.json();
+            currentChatId = data.chat_id;
+        } catch (error) {
+            showError('Failed to create new chat: ' + error.message);
+            return;
+        }
+    }
+
+    messageInput.value = '';
+    appendMessage(message, 'user');
+    showLoading();
+
+    try {
+        // First, save the message
+        const saveResponse = await fetch(`/chat/${currentChatId}/message`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message })
+        });
+
+        if (!saveResponse.ok) {
+            throw new Error('Failed to save message');
+        }
+
+        // Close any existing SSE connection
+        if (currentEventSource) {
+            currentEventSource.close();
+        }
+
+        // Set up SSE connection for streaming response
+        currentEventSource = new EventSource(`/chat/${currentChatId}/message/stream`);
+        let assistantResponse = '';
+        let responseDiv = null;
+
+        currentEventSource.onmessage = function(event) {
+            if (event.data === '[DONE]') {
+                currentEventSource.close();
+                showLoading(false);
+                // Refresh the chat after response is complete
+                loadChat(currentChatId);
+                return;
+            }
+
+            if (!responseDiv) {
+                responseDiv = document.createElement('div');
+                responseDiv.className = 'message assistant';
+                document.getElementById('chatMessages').appendChild(responseDiv);
+            }
+
+            assistantResponse += event.data;
+            responseDiv.innerHTML = formatCodeBlocks(assistantResponse);
+            
+            // Immediately highlight any code blocks
+            responseDiv.querySelectorAll('pre code').forEach((block) => {
+                block.removeAttribute('data-highlighted');
+                hljs.highlightElement(block);
+            });
+            
+            responseDiv.scrollIntoView({ behavior: 'smooth' });
+        };
+
+        currentEventSource.onerror = function(error) {
+            console.error('EventSource error:', error);
+            currentEventSource.close();
+            showLoading(false);
+            showError('Connection lost. Please try again.');
+        };
+    } catch (error) {
+        showError('Failed to send message: ' + error.message);
+        showLoading(false);
     }
 }
 
@@ -125,97 +243,91 @@ async function deleteChat(chatId) {
             throw new Error('Failed to delete chat');
         }
 
-        window.location.reload();
-    } catch (error) {
-        showError(error.message);
-    }
-}
+        const chatListItem = document.querySelector(`.chat-list-item:has(.chat-item[data-chat-id="${chatId}"])`);
+        chatListItem.remove();
 
-async function sendMessage(event) {
-    event.preventDefault();
-
-    if (!currentChatId) {
-        showError('No chat selected');
-        return;
-    }
-
-    const messageInput = document.getElementById('messageInput');
-    const message = messageInput.value.trim();
-
-    if (!message) {
-        return;
-    }
-
-    try {
-        // Send the message
-        const response = await fetch(`/chat/${currentChatId}/message`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ message })
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to send message');
-        }
-
-        // Clear input and show loading
-        messageInput.value = '';
-        showLoading(true);
-
-        // Start streaming the response
-        if (currentEventSource) {
-            currentEventSource.close();
-        }
-
-        currentEventSource = new EventSource(`/chat/${currentChatId}/message/stream`);
-        let assistantMessage = document.createElement('div');
-        assistantMessage.className = 'message assistant';
-        chatMessages.appendChild(assistantMessage);
-
-        currentEventSource.onmessage = function(event) {
-            if (event.data === '[DONE]') {
-                currentEventSource.close();
-                showLoading(false);
-                hljs.highlightAll();
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            } else {
-                assistantMessage.innerHTML += event.data;
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+        // If deleted chat was current chat, clear messages
+        if (currentChatId === chatId) {
+            document.getElementById('chatMessages').innerHTML = '';
+            currentChatId = null;
+            
+            // Load first available chat if exists
+            const firstChat = document.querySelector('.chat-item');
+            if (firstChat) {
+                loadChat(firstChat.dataset.chatId);
             }
-        };
-
-        currentEventSource.onerror = function(error) {
-            currentEventSource.close();
-            showLoading(false);
-            showError('Error receiving response');
-        };
-
+        }
     } catch (error) {
-        showError(error.message);
-        showLoading(false);
+        showError('Failed to delete chat: ' + error.message);
     }
 }
 
-function displayMessages(messages) {
-    const chatMessages = document.getElementById('chatMessages');
-    chatMessages.innerHTML = '';
-    
-    messages.forEach(message => {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${message.role}`;
-        messageDiv.innerHTML = message.content;
-        chatMessages.appendChild(messageDiv);
+async function updateChatTitle(chatId) {
+    try {
+        const response = await fetch(`/chat/${chatId}/title`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch chat title');
+        }
+        
+        const data = await response.json();
+        const chatItem = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+        if (chatItem) {
+            chatItem.textContent = data.title;
+        }
+    } catch (error) {
+        console.error('Failed to update chat title:', error);
+    }
+}
+
+function formatCodeBlocks(content) {
+    // Handle triple backtick blocks
+    content = content.replace(/```(\w+)?\n([\s\S]*?)\n```/g, (match, language, code) => {
+        language = language || 'plaintext';
+        // Remove any remaining backticks from the code
+        code = code.replace(/`/g, '');
+        const formattedCode = code.trim()
+            .split('\n')
+            .map(line => escapeHtml(line))
+            .join('\n');
+        return `<pre><code class="language-${language}">${formattedCode}</code></pre>`;
     });
-
-    hljs.highlightAll();
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Handle inline code blocks (single backticks)
+    content = content.replace(/`([^`]+)`/g, (match, code) => {
+        return `<code class="inline-code">${escapeHtml(code)}</code>`;
+    });
+    
+    // Handle regular line breaks
+    const parts = content.split(/(<pre>.*?<\/pre>)/gs);
+    return parts.map((part, index) => {
+        // If it's a code block, leave it unchanged
+        if (index % 2 === 1) return part;
+        // For non-code parts, convert newlines to <br>
+        return part.replace(/\n/g, '<br>');
+    }).join('');
 }
 
-function updateChatTitle(title, tags) {
-    const chatTitle = document.querySelector('.chat-title');
-    if (chatTitle) {
-        chatTitle.textContent = title;
-    }
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function appendMessage(content, role) {
+    console.log('Appending message:', { role, contentLength: content.length });
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${role}`;
+    
+    // Format content and handle code blocks
+    messageDiv.innerHTML = formatCodeBlocks(content);
+    
+    chatMessages.appendChild(messageDiv);
+    messageDiv.scrollIntoView({ behavior: 'smooth' });
+    
+    // Initialize syntax highlighting for new code blocks
+    messageDiv.querySelectorAll('pre code').forEach((block) => {
+        block.removeAttribute('data-highlighted');
+        hljs.highlightElement(block);
+    });
 }
