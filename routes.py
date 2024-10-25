@@ -36,6 +36,9 @@ def register():
         user.username = request.form['username']
         user.email = request.form['email']
         user.set_password(request.form['password'])
+        # Make the first user an admin
+        if User.query.count() == 0:
+            user.is_admin = True
         db.session.add(user)
         db.session.commit()
         login_user(user)
@@ -46,6 +49,40 @@ def register():
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
+@app.route('/admin')
+@login_required
+def admin():
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.')
+        return redirect(url_for('index'))
+    users = User.query.all()
+    return render_template('admin.html', users=users)
+
+@app.route('/admin/user/<int:user_id>/delete', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    user = User.query.get_or_404(user_id)
+    if user == current_user:
+        return jsonify({'error': 'Cannot delete yourself'}), 400
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'success': True})
+
+@app.route('/admin/user/<int:user_id>/toggle-admin', methods=['POST'])
+@login_required
+def toggle_admin(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    if current_user.id == user_id:
+        return jsonify({'error': 'Cannot modify your own admin status'}), 400
+    
+    user = User.query.get_or_404(user_id)
+    user.is_admin = request.json.get('is_admin', False)
+    db.session.commit()
+    return jsonify({'success': True})
 
 @app.route('/chat')
 @login_required

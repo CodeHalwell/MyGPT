@@ -20,6 +20,9 @@
             <a class="navbar-brand" href="{{ url_for('index') }}">AI Chat Assistant</a>
             {% if current_user.is_authenticated %}
             <div class="navbar-nav ms-auto">
+                {% if current_user.is_admin %}
+                <a class="nav-item nav-link" href="{{ url_for('admin') }}">Admin</a>
+                {% endif %}
                 <span class="nav-item nav-link">Welcome, {{ current_user.username }}</span>
                 <a class="nav-item nav-link" href="{{ url_for('logout') }}">Logout</a>
             </div>
