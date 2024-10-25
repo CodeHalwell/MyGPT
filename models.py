@@ -3,6 +3,12 @@ from app import db, login_manager
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
+# Association table for many-to-many relationship between Chat and Tag
+chat_tags = db.Table('chat_tags',
+    db.Column('chat_id', db.Integer, db.ForeignKey('chat.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
@@ -17,12 +23,19 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+class Tag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    color = db.Column(db.String(7), default="#6c757d")  # Default to Bootstrap secondary color
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 class Chat(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     title = db.Column(db.String(200))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     messages = db.relationship('Message', backref='chat', lazy=True)
+    tags = db.relationship('Tag', secondary=chat_tags, backref=db.backref('chats', lazy=True))
 
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)

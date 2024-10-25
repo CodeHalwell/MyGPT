@@ -1,6 +1,6 @@
 import os
 from openai import OpenAI
-from typing import Iterator, List, Dict
+from typing import Iterator, List, Dict, Set
 from openai.types.chat import ChatCompletionMessage, ChatCompletionMessageParam, ChatCompletionSystemMessageParam
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
@@ -106,3 +106,32 @@ def generate_chat_summary(messages: List[Dict[str, str]]) -> str:
     )
     
     return response.choices[0].message.content or ""
+
+def suggest_tags(messages: List[Dict[str, str]]) -> Set[str]:
+    """Generate tag suggestions based on conversation content."""
+    if not messages:
+        return set()
+        
+    formatted_messages: List[ChatCompletionMessageParam] = [
+        {"role": m.role, "content": m.content}
+        for m in messages
+    ]
+    
+    tag_prompt: ChatCompletionSystemMessageParam = {
+        "role": "system",
+        "content": """Analyze the conversation and suggest 1-3 relevant tags.
+Rules for tags:
+1. Use lowercase letters only
+2. Use single words or hyphenated phrases
+3. Focus on technical topics, concepts, or programming languages
+4. Respond with tags only, separated by commas
+Example response: python, algorithms, data-structures"""
+    }
+    
+    response = openai_client.chat.completions.create(
+        model="gpt-4",
+        messages=[tag_prompt] + formatted_messages
+    )
+    
+    tags = response.choices[0].message.content.split(',')
+    return {tag.strip().lower() for tag in tags if tag.strip()}
