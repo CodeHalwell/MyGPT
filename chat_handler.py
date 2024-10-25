@@ -11,15 +11,9 @@ def get_ai_response_stream(messages) -> Iterator[str]:
         for m in messages
     ]
     
-    # Add system message to ensure proper code formatting
     system_message = {
         "role": "system",
-        "content": """When providing code examples, always start code blocks on a new line after the triple backticks and language specification. For example:
-
-```python
-def example():
-    pass
-```"""
+        "content": "When providing code examples, always format them properly with triple backticks and language specification."
     }
     formatted_messages.insert(0, system_message)
     
@@ -29,30 +23,41 @@ def example():
         stream=True
     )
     
-    current_code_block = ""
-    in_code_block = False
+    buffer = ""
     
     for chunk in response:
         if chunk.choices[0].delta.content:
             content = chunk.choices[0].delta.content
+            buffer += content
             
-            # Check for code block markers
-            if "```" in content:
-                # If we're in a code block and see ```, we're ending it
-                if in_code_block:
-                    current_code_block += content
-                    yield current_code_block
-                    current_code_block = ""
-                    in_code_block = False
-                else:
-                    # Starting a new code block
-                    yield content + "\n"  # Add newline after ```language
-                    in_code_block = True
-            else:
-                if in_code_block:
-                    current_code_block += content
-                else:
-                    yield content
+            # Look for complete code blocks
+            while True:
+                # Try to find a complete code block
+                start = buffer.find("```")
+                if start == -1:
+                    # No code block started, yield all buffer
+                    yield buffer
+                    buffer = ""
+                    break
+                    
+                # Look for the end of this code block
+                search_start = start + 3
+                end = buffer.find("```", search_start)
+                if end == -1:
+                    # Code block not complete yet, keep in buffer
+                    break
+                    
+                # We found a complete code block
+                # Yield everything before it
+                if start > 0:
+                    yield buffer[:start]
+                    
+                # Yield the code block
+                code_block = buffer[start:end + 3]
+                yield code_block
+                
+                # Keep the rest in the buffer
+                buffer = buffer[end + 3:]
 
 def get_ai_response(messages):
     formatted_messages = [
