@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row h-100">
+    <!-- Sidebar -->
+    <div class="col-md-3 border-end">
+        <div class="d-grid mb-3">
+            <button id="newChatBtn" class="btn btn-primary">New Chat</button>
+        </div>
+        <div class="list-group">
+            {% for chat in chats %}
+            <a href="#" class="list-group-item list-group-item-action chat-item" data-chat-id="{{ chat.id }}">
+                {{ chat.title or 'New Chat' }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="col-md-9">
+        <div id="chatMessages" class="chat-messages mb-3" style="height: 70vh; overflow-y: auto;">
+            <!-- Messages will be displayed here -->
+        </div>
+        <div class="chat-input">
+            <form id="messageForm" class="d-flex">
+                <input type="text" id="messageInput" class="form-control me-2" placeholder="Type your message..." required>
+                <button type="submit" class="btn btn-primary">Send</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}
