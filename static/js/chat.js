@@ -248,25 +248,24 @@ async function updateChatTitle(chatId) {
 }
 
 function formatCodeBlocks(content) {
-    // Split content by code block markers
-    const parts = content.split(/(```[\w-]*\n[\s\S]*?\n```)/g);
-    let formattedContent = '';
+    // First handle triple backtick blocks
+    content = content.replace(/```([\w-]*)\n([\s\S]*?)\n```/g, (match, language, code) => {
+        language = language.trim() || 'plaintext';
+        return `<pre><code class="language-${language}">${escapeHtml(code.trim())}</code></pre>`;
+    });
     
-    for (const part of parts) {
-        if (part.startsWith('```')) {
-            // Extract language and code
-            const firstLineEnd = part.indexOf('\n');
-            const language = part.slice(3, firstLineEnd).trim();
-            const code = part.slice(firstLineEnd + 1, -4).trim();
-            
-            // Create formatted code block
-            formattedContent += `<pre><code class="language-${language || 'plaintext'}">${escapeHtml(code)}</code></pre>`;
-        } else {
-            formattedContent += part;
-        }
-    }
+    // Then handle inline code blocks
+    content = content.replace(/`([^`]+)`/g, (match, code) => {
+        return `<code class="inline-code">${escapeHtml(code)}</code>`;
+    });
     
-    return formattedContent;
+    // Convert URLs to links
+    content = content.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank">$1</a>');
+    
+    // Convert line breaks to <br> tags for better formatting
+    content = content.replace(/\n/g, '<br>');
+    
+    return content;
 }
 
 function escapeHtml(text) {
