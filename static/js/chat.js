@@ -31,10 +31,34 @@ document.addEventListener('DOMContentLoaded', function() {
             sidebar.classList.toggle('collapsed');
             chatArea.classList.toggle('sidebar-collapsed');
             
+            // For mobile devices
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('show');
+            }
+            
             // Save state
             localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
         });
     }
+
+    // Handle clicks outside sidebar on mobile
+    document.addEventListener('click', function(event) {
+        if (window.innerWidth <= 768) {
+            const isClickInsideSidebar = sidebar.contains(event.target);
+            const isClickOnToggle = sidebarToggle.contains(event.target);
+            
+            if (!isClickInsideSidebar && !isClickOnToggle && sidebar.classList.contains('show')) {
+                sidebar.classList.remove('show');
+            }
+        }
+    });
+
+    // Window resize handler
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+            sidebar.classList.remove('show');
+        }
+    });
 
     newChatBtn.addEventListener('click', createNewChat);
     messageForm.addEventListener('submit', sendMessage);
@@ -77,4 +101,166 @@ function showError(message) {
     }, 5000);
 }
 
-[Rest of the chat.js file remains unchanged...]
+async function createNewChat() {
+    try {
+        const response = await fetch('/chat/new', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to create new chat');
+        }
+
+        const data = await response.json();
+        window.location.reload();
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+async function loadChat(chatId) {
+    try {
+        // Update active state
+        document.querySelectorAll('.chat-item').forEach(item => {
+            item.classList.remove('active');
+            if (item.dataset.chatId === chatId) {
+                item.classList.add('active');
+            }
+        });
+
+        currentChatId = chatId;
+
+        // Load messages
+        const response = await fetch(`/chat/${chatId}/messages`);
+        if (!response.ok) {
+            throw new Error('Failed to load messages');
+        }
+
+        const messages = await response.json();
+        displayMessages(messages);
+
+        // Update chat title
+        const titleResponse = await fetch(`/chat/${chatId}/title`);
+        if (titleResponse.ok) {
+            const titleData = await titleResponse.json();
+            updateChatTitle(titleData.title, titleData.tags);
+        }
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+async function deleteChat(chatId) {
+    if (!confirm('Are you sure you want to delete this chat?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/chat/${chatId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete chat');
+        }
+
+        window.location.reload();
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+async function sendMessage(event) {
+    event.preventDefault();
+
+    if (!currentChatId) {
+        showError('No chat selected');
+        return;
+    }
+
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput.value.trim();
+
+    if (!message) {
+        return;
+    }
+
+    try {
+        // Send the message
+        const response = await fetch(`/chat/${currentChatId}/message`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to send message');
+        }
+
+        // Clear input and show loading
+        messageInput.value = '';
+        showLoading(true);
+
+        // Start streaming the response
+        if (currentEventSource) {
+            currentEventSource.close();
+        }
+
+        currentEventSource = new EventSource(`/chat/${currentChatId}/message/stream`);
+        let assistantMessage = document.createElement('div');
+        assistantMessage.className = 'message assistant';
+        chatMessages.appendChild(assistantMessage);
+
+        currentEventSource.onmessage = function(event) {
+            if (event.data === '[DONE]') {
+                currentEventSource.close();
+                showLoading(false);
+                hljs.highlightAll();
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            } else {
+                assistantMessage.innerHTML += event.data;
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        };
+
+        currentEventSource.onerror = function(error) {
+            currentEventSource.close();
+            showLoading(false);
+            showError('Error receiving response');
+        };
+
+    } catch (error) {
+        showError(error.message);
+        showLoading(false);
+    }
+}
+
+function displayMessages(messages) {
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.innerHTML = '';
+    
+    messages.forEach(message => {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${message.role}`;
+        messageDiv.innerHTML = message.content;
+        chatMessages.appendChild(messageDiv);
+    });
+
+    hljs.highlightAll();
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function updateChatTitle(title, tags) {
+    const chatTitle = document.querySelector('.chat-title');
+    if (chatTitle) {
+        chatTitle.textContent = title;
+    }
+}
