@@ -1,7 +1,8 @@
-/* Container fluid styles */
+/* Update container-fluid styles for fixed height */
 .container-fluid {
-    height: calc(100vh - 72px);  /* Account for navbar */
-    padding: 1rem 1rem 0 1rem;   /* Remove bottom padding */
+    min-height: 800px;  /* Set minimum height */
+    height: calc(100vh - 72px);  /* Keep max height as viewport height */
+    padding: 1rem 1rem 0 1rem;
 }
 
 /* Sidebar styles */
@@ -57,17 +58,21 @@
     opacity: 1;
 }
 
-/* Chat container styles */
+/* Update chat container for fixed width */
 .chat-container {
+    width: 100%;
+    max-width: 1200px;  /* Set maximum width */
+    margin: 0 auto;     /* Center the container */
     height: 100%;
     display: flex;
     flex-direction: column;
     position: relative;
 }
 
-/* Chat messages styles */
+/* Update chat messages area */
 .chat-messages {
     flex: 1;
+    min-height: 600px;  /* Set minimum height */
     overflow-y: auto;
     padding: 1.5rem;
     background: var(--bs-dark);
@@ -192,10 +197,10 @@
     padding: 0.4rem 0.6rem;
 }
 
-/* Responsive styles */
+/* Update responsive styles */
 @media (max-width: 768px) {
     .container-fluid {
-        height: calc(100vh - 80px);
+        min-height: 600px;
     }
     
     .col-md-3 {
@@ -219,6 +224,7 @@
     }
     
     .chat-messages {
+        min-height: 400px;
         margin-bottom: 65px;
     }
 }
