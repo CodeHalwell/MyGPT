@@ -248,22 +248,32 @@ async function updateChatTitle(chatId) {
 }
 
 function formatCodeBlocks(content) {
-    // First handle triple backtick blocks
+    // First handle triple backtick blocks with proper line breaks
     content = content.replace(/```([\w-]*)\n([\s\S]*?)\n```/g, (match, language, code) => {
         language = language.trim() || 'plaintext';
-        return `<pre><code class="language-${language}">${escapeHtml(code.trim())}</code></pre>`;
+        // Ensure code maintains its line breaks
+        const formattedCode = code.trim()
+            .split('\n')
+            .map(line => escapeHtml(line))
+            .join('\n');
+        return `<pre><code class="language-${language}">${formattedCode}</code></pre>`;
     });
     
-    // Then handle inline code blocks
+    // Handle inline code blocks
     content = content.replace(/`([^`]+)`/g, (match, code) => {
         return `<code class="inline-code">${escapeHtml(code)}</code>`;
     });
     
-    // Convert URLs to links
-    content = content.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank">$1</a>');
-    
-    // Convert line breaks to <br> tags for better formatting
-    content = content.replace(/\n/g, '<br>');
+    // Convert URLs to links (only for non-code content)
+    const parts = content.split(/(<pre>.*?<\/pre>)/gs);
+    content = parts.map((part, index) => {
+        // If it's an odd index, it's a code block - leave it unchanged
+        if (index % 2 === 1) return part;
+        // For non-code parts, convert URLs to links and handle line breaks
+        return part
+            .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank">$1</a>')
+            .replace(/\n/g, '<br>');
+    }).join('');
     
     return content;
 }
