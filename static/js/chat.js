@@ -8,57 +8,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatMessages = document.getElementById('chatMessages');
     const chatItems = document.querySelectorAll('.chat-item');
     const deleteChatBtns = document.querySelectorAll('.delete-chat-btn');
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const sidebar = document.getElementById('sidebar');
-    const chatArea = document.querySelector('.chat-area');
 
     // Initialize highlight.js
     hljs.configure({
         ignoreUnescapedHTML: true
     });
     hljs.highlightAll();
-
-    // Load saved sidebar state
-    const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-    if (sidebarCollapsed) {
-        sidebar.classList.add('collapsed');
-        chatArea.classList.add('sidebar-collapsed');
-    }
-
-    // Sidebar toggle functionality
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('collapsed');
-            chatArea.classList.toggle('sidebar-collapsed');
-            
-            // For mobile devices
-            if (window.innerWidth <= 768) {
-                sidebar.classList.toggle('show');
-            }
-            
-            // Save state
-            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-        });
-    }
-
-    // Handle clicks outside sidebar on mobile
-    document.addEventListener('click', function(event) {
-        if (window.innerWidth <= 768) {
-            const isClickInsideSidebar = sidebar.contains(event.target);
-            const isClickOnToggle = sidebarToggle.contains(event.target);
-            
-            if (!isClickInsideSidebar && !isClickOnToggle && sidebar.classList.contains('show')) {
-                sidebar.classList.remove('show');
-            }
-        }
-    });
-
-    // Window resize handler
-    window.addEventListener('resize', function() {
-        if (window.innerWidth > 768) {
-            sidebar.classList.remove('show');
-        }
-    });
 
     newChatBtn.addEventListener('click', createNewChat);
     messageForm.addEventListener('submit', sendMessage);
