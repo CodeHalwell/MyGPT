@@ -32,10 +32,9 @@ def register():
             flash('Username already exists')
             return redirect(url_for('register'))
         
-        user = User(
-            username=request.form['username'],
-            email=request.form['email']
-        )
+        user = User()
+        user.username = request.form['username']
+        user.email = request.form['email']
         user.set_password(request.form['password'])
         db.session.add(user)
         db.session.commit()
@@ -57,7 +56,9 @@ def chat():
 @app.route('/chat/new', methods=['POST'])
 @login_required
 def new_chat():
-    chat = Chat(user_id=current_user.id, title="New Chat")
+    chat = Chat()
+    chat.user_id = current_user.id
+    chat.title = "New Chat"
     db.session.add(chat)
     db.session.commit()
     return jsonify({'chat_id': chat.id})
@@ -69,31 +70,60 @@ def send_message(chat_id):
     if chat.user_id != current_user.id:
         return jsonify({'error': 'Unauthorized'}), 403
     
+    if not request.is_json:
+        return jsonify({'error': 'Content-Type must be application/json'}), 415
+    
     content = request.json.get('message')
-    user_message = Message(chat_id=chat_id, content=content, role='user')
+    if not content:
+        return jsonify({'error': 'Message content is required'}), 400
+
+    user_message = Message()
+    user_message.chat_id = chat_id
+    user_message.content = content
+    user_message.role = 'user'
     db.session.add(user_message)
     db.session.flush()
 
     def generate():
-        messages = Message.query.filter_by(chat_id=chat_id).order_by(Message.timestamp).all()
-        accumulated_response = []
-        
-        for chunk in get_ai_response_stream(messages):
-            accumulated_response.append(chunk)
-            yield f"data: {chunk}\n\n"
-        
-        complete_response = ''.join(accumulated_response)
-        ai_message = Message(chat_id=chat_id, content=complete_response, role='assistant')
-        db.session.add(ai_message)
-        
-        # Generate and update chat summary
-        all_messages = Message.query.filter_by(chat_id=chat_id).order_by(Message.timestamp).all()
-        chat.title = generate_chat_summary(all_messages)
-        db.session.commit()
-        
-        yield f"data: [DONE]\n\n"
+        try:
+            # Send SSE headers
+            yield 'event: message\n'
+            
+            messages = Message.query.filter_by(chat_id=chat_id).order_by(Message.timestamp).all()
+            accumulated_response = []
+            
+            for chunk in get_ai_response_stream(messages):
+                accumulated_response.append(chunk)
+                yield f"data: {chunk}\n\n"
+            
+            complete_response = ''.join(accumulated_response)
+            ai_message = Message()
+            ai_message.chat_id = chat_id
+            ai_message.content = complete_response
+            ai_message.role = 'assistant'
+            db.session.add(ai_message)
+            
+            # Generate and update chat summary
+            all_messages = Message.query.filter_by(chat_id=chat_id).order_by(Message.timestamp).all()
+            chat.title = generate_chat_summary(all_messages)
+            db.session.commit()
+            
+            yield 'data: [DONE]\n\n'
+        except Exception as e:
+            db.session.rollback()
+            yield f'data: error: {str(e)}\n\n'
+            yield 'data: [DONE]\n\n'
 
-    return Response(stream_with_context(generate()), mimetype='text/event-stream')
+    response = Response(
+        stream_with_context(generate()),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
+        }
+    )
+    return response
 
 @app.route('/chat/<int:chat_id>/messages')
 @login_required

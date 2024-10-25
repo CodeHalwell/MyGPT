@@ -127,11 +127,26 @@ async function sendMessage(e) {
     showLoading();
 
     try {
+        // Close any existing SSE connection
         if (currentEventSource) {
             currentEventSource.close();
         }
 
-        currentEventSource = new EventSource(`/chat/${currentChatId}/message?message=${encodeURIComponent(message)}`);
+        // First, send the message using POST
+        const response = await fetch(`/chat/${currentChatId}/message`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to send message');
+        }
+
+        // Set up SSE connection for streaming response
+        currentEventSource = new EventSource(`/chat/${currentChatId}/message`);
         let assistantResponse = '';
         let responseDiv = null;
 
