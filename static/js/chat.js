@@ -1,4 +1,5 @@
 let currentChatId = null;
+let currentEventSource = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Chat application initialized');
@@ -69,6 +70,10 @@ async function createNewChat() {
 
 async function loadChat(chatId) {
     console.log('Loading chat:', chatId);
+    if (currentEventSource) {
+        currentEventSource.close();
+    }
+    
     currentChatId = chatId;
     const chatMessages = document.getElementById('chatMessages');
     chatMessages.innerHTML = '';
@@ -94,6 +99,9 @@ async function loadChat(chatId) {
                 item.classList.add('active');
             }
         });
+
+        // Update chat title
+        await updateChatTitle(chatId);
     } catch (error) {
         showError('Failed to load chat: ' + error.message);
     } finally {
@@ -119,27 +127,59 @@ async function sendMessage(e) {
     showLoading();
 
     try {
-        const response = await fetch(`/chat/${currentChatId}/message`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ message })
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to send message');
+        if (currentEventSource) {
+            currentEventSource.close();
         }
 
-        const data = await response.json();
-        console.log('Received response:', data);
-        appendMessage(data.ai_response, 'assistant');
-        const chatMessages = document.getElementById('chatMessages');
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        currentEventSource = new EventSource(`/chat/${currentChatId}/message?message=${encodeURIComponent(message)}`);
+        let assistantResponse = '';
+        let responseDiv = null;
+
+        currentEventSource.onmessage = function(event) {
+            if (event.data === '[DONE]') {
+                currentEventSource.close();
+                showLoading(false);
+                updateChatTitle(currentChatId);
+                return;
+            }
+
+            if (!responseDiv) {
+                responseDiv = document.createElement('div');
+                responseDiv.className = 'message assistant';
+                document.getElementById('chatMessages').appendChild(responseDiv);
+            }
+
+            assistantResponse += event.data;
+            responseDiv.textContent = assistantResponse;
+            responseDiv.scrollIntoView({ behavior: 'smooth' });
+        };
+
+        currentEventSource.onerror = function(error) {
+            console.error('EventSource error:', error);
+            currentEventSource.close();
+            showLoading(false);
+            showError('Connection lost. Please try again.');
+        };
     } catch (error) {
         showError('Failed to send message: ' + error.message);
-    } finally {
         showLoading(false);
+    }
+}
+
+async function updateChatTitle(chatId) {
+    try {
+        const response = await fetch(`/chat/${chatId}/title`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch chat title');
+        }
+        
+        const data = await response.json();
+        const chatItem = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+        if (chatItem) {
+            chatItem.textContent = data.title;
+        }
+    } catch (error) {
+        console.error('Failed to update chat title:', error);
     }
 }
 
@@ -150,4 +190,5 @@ function appendMessage(content, role) {
     messageDiv.className = `message ${role}`;
     messageDiv.textContent = content;
     chatMessages.appendChild(messageDiv);
+    messageDiv.scrollIntoView({ behavior: 'smooth' });
 }

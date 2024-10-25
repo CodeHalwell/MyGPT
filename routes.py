@@ -1,8 +1,8 @@
-from flask import render_template, redirect, url_for, request, flash, jsonify
+from flask import render_template, redirect, url_for, request, flash, jsonify, Response, stream_with_context
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db
 from models import User, Chat, Message
-from chat_handler import get_ai_response
+from chat_handler import get_ai_response_stream, generate_chat_summary
 
 @app.route('/')
 @login_required
@@ -72,24 +72,28 @@ def send_message(chat_id):
     content = request.json.get('message')
     user_message = Message(chat_id=chat_id, content=content, role='user')
     db.session.add(user_message)
-    
-    # Get chat history
-    messages = Message.query.filter_by(chat_id=chat_id).order_by(Message.timestamp).all()
-    
-    # Get AI response
-    ai_response = get_ai_response(messages)
-    ai_message = Message(chat_id=chat_id, content=ai_response, role='assistant')
-    db.session.add(ai_message)
-    
-    if not chat.title:
-        chat.title = content[:30] + "..."
-    
-    db.session.commit()
-    
-    return jsonify({
-        'user_message': content,
-        'ai_response': ai_response
-    })
+    db.session.flush()
+
+    def generate():
+        messages = Message.query.filter_by(chat_id=chat_id).order_by(Message.timestamp).all()
+        accumulated_response = []
+        
+        for chunk in get_ai_response_stream(messages):
+            accumulated_response.append(chunk)
+            yield f"data: {chunk}\n\n"
+        
+        complete_response = ''.join(accumulated_response)
+        ai_message = Message(chat_id=chat_id, content=complete_response, role='assistant')
+        db.session.add(ai_message)
+        
+        # Generate and update chat summary
+        all_messages = Message.query.filter_by(chat_id=chat_id).order_by(Message.timestamp).all()
+        chat.title = generate_chat_summary(all_messages)
+        db.session.commit()
+        
+        yield f"data: [DONE]\n\n"
+
+    return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
 @app.route('/chat/<int:chat_id>/messages')
 @login_required
@@ -104,3 +108,11 @@ def get_messages(chat_id):
         'role': m.role,
         'timestamp': m.timestamp.isoformat()
     } for m in messages])
+
+@app.route('/chat/<int:chat_id>/title', methods=['GET'])
+@login_required
+def get_chat_title(chat_id):
+    chat = Chat.query.get_or_404(chat_id)
+    if chat.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    return jsonify({'title': chat.title})
