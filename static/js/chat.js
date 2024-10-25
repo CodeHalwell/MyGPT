@@ -9,6 +9,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatItems = document.querySelectorAll('.chat-item');
     const deleteChatBtns = document.querySelectorAll('.delete-chat-btn');
 
+    // Initialize highlight.js
+    hljs.configure({
+        ignoreUnescapedHTML: true
+    });
+    hljs.highlightAll();
+
     newChatBtn.addEventListener('click', createNewChat);
     messageForm.addEventListener('submit', sendMessage);
     chatItems.forEach(item => {
@@ -97,6 +103,12 @@ async function loadChat(chatId) {
         messages.forEach(message => {
             appendMessage(message.content, message.role);
         });
+
+        // Apply syntax highlighting to code blocks
+        document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+        });
+
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
         // Update active state in sidebar
@@ -161,6 +173,10 @@ async function sendMessage(e) {
             if (event.data === '[DONE]') {
                 currentEventSource.close();
                 showLoading(false);
+                // Ensure final message is properly highlighted
+                document.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
                 updateChatTitle(currentChatId);
                 return;
             }
