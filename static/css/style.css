@@ -47,9 +47,12 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.message code {
+.message pre code {
+    display: block;
+    line-height: 1.5;
+    tab-size: 4;
     font-family: 'Source Code Pro', monospace;
-    white-space: pre-wrap;
+    white-space: pre;
     font-size: 0.9em;
 }
 
@@ -110,6 +113,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.chat-item.active {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
 }
 
 .delete-chat-btn {
