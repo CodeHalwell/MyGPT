@@ -166,6 +166,21 @@
     display: flex;
 }
 
+/* Error message styles */
+.error-message {
+    display: none;
+    padding: 1rem;
+    margin: 1rem 0;
+    background-color: var(--bs-danger);
+    color: var(--bs-light);
+    border-radius: 0.5rem;
+    text-align: center;
+}
+
+.error-message.visible {
+    display: block;
+}
+
 /* Footer container styles */
 .chat-footer {
     position: sticky;
