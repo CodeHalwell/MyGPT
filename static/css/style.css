@@ -37,6 +37,21 @@
     border-bottom-left-radius: 0.25rem;
 }
 
+/* Code block styles */
+.message pre {
+    background: var(--bs-dark);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    overflow-x: auto;
+}
+
+.message code {
+    font-family: 'Source Code Pro', monospace;
+    white-space: pre-wrap;
+    font-size: 0.9em;
+}
+
 /* Loading indicator */
 .loading-spinner {
     display: none;

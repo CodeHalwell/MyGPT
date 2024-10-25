@@ -172,7 +172,13 @@ async function sendMessage(e) {
             }
 
             assistantResponse += event.data;
-            responseDiv.textContent = assistantResponse;
+            responseDiv.innerHTML = formatCodeBlocks(assistantResponse);
+            
+            // Apply syntax highlighting to any code blocks
+            responseDiv.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+            
             responseDiv.scrollIntoView({ behavior: 'smooth' });
         };
 
@@ -241,12 +247,48 @@ async function updateChatTitle(chatId) {
     }
 }
 
+function formatCodeBlocks(content) {
+    // Split content by code block markers
+    const parts = content.split(/(```[\w-]*\n[\s\S]*?\n```)/g);
+    let formattedContent = '';
+    
+    for (const part of parts) {
+        if (part.startsWith('```')) {
+            // Extract language and code
+            const firstLineEnd = part.indexOf('\n');
+            const language = part.slice(3, firstLineEnd).trim();
+            const code = part.slice(firstLineEnd + 1, -4).trim();
+            
+            // Create formatted code block
+            formattedContent += `<pre><code class="language-${language || 'plaintext'}">${escapeHtml(code)}</code></pre>`;
+        } else {
+            formattedContent += part;
+        }
+    }
+    
+    return formattedContent;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 function appendMessage(content, role) {
     console.log('Appending message:', { role, contentLength: content.length });
     const chatMessages = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${role}`;
-    messageDiv.textContent = content;
+    
+    // Format content and handle code blocks
+    messageDiv.innerHTML = formatCodeBlocks(content);
+    
     chatMessages.appendChild(messageDiv);
     messageDiv.scrollIntoView({ behavior: 'smooth' });
+    
+    // Initialize syntax highlighting for new code blocks
+    messageDiv.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block);
+    });
 }
