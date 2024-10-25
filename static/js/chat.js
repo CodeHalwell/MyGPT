@@ -67,7 +67,7 @@ async function createNewChat() {
         const data = await response.json();
         console.log('New chat created:', data);
         currentChatId = data.chat_id;
-        location.reload(); // Refresh to show new chat in sidebar
+        location.reload(); // Keep this for new chat creation as we need to update the sidebar
     } catch (error) {
         showError('Failed to create new chat: ' + error.message);
     } finally {
@@ -205,16 +205,19 @@ async function deleteChat(chatId) {
             throw new Error('Failed to delete chat');
         }
 
-        // If the deleted chat was the current chat, clear the messages
+        const chatListItem = document.querySelector(`.chat-list-item[data-chat-id="${chatId}"]`);
+        chatListItem.remove();
+
+        // If deleted chat was current chat, clear messages
         if (currentChatId === chatId) {
             document.getElementById('chatMessages').innerHTML = '';
             currentChatId = null;
-        }
-
-        // Remove the chat from the sidebar
-        const chatItem = document.querySelector(`.chat-list-item[data-chat-id="${chatId}"]`);
-        if (chatItem) {
-            chatItem.remove();
+            
+            // Load first available chat if exists
+            const firstChat = document.querySelector('.chat-item');
+            if (firstChat) {
+                loadChat(firstChat.dataset.chatId);
+            }
         }
     } catch (error) {
         showError('Failed to delete chat: ' + error.message);
