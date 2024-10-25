@@ -1,23 +1,26 @@
 /* Chat container styles */
 .chat-container {
-    height: 70vh;
+    height: calc(100vh - 120px);  /* Adjust for navbar and padding */
     display: flex;
     flex-direction: column;
+    margin: 0 auto;
+    max-width: 1200px;  /* Maximum width for better readability */
 }
 
 .chat-messages {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 1rem;
+    padding: 1.5rem;
     background: var(--bs-dark);
     border-radius: 0.5rem;
+    margin-bottom: 1rem;
 }
 
 /* Message styles */
 .message {
-    max-width: 80%;
-    margin-bottom: 1rem;
-    padding: 1rem;
+    max-width: 85%;  /* Slightly wider messages */
+    margin-bottom: 1.5rem;  /* More spacing between messages */
+    padding: 1.25rem;
     border-radius: 1rem;
     white-space: pre-wrap;
     word-break: break-word;
@@ -42,8 +45,9 @@
     background: var(--bs-dark);
     border-radius: 0.5rem;
     padding: 1.2rem;
-    margin: 0.8rem 0;
+    margin: 1rem 0;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-x: auto;  /* Horizontal scroll for long code */
 }
 
 .message pre code {
@@ -52,6 +56,7 @@
     tab-size: 4;
     font-family: 'Source Code Pro', monospace;
     line-height: 1.5;
+    font-size: 0.95rem;  /* Slightly smaller for better readability */
 }
 
 /* Inline code styles */
@@ -79,11 +84,14 @@
 .chat-input {
     margin-top: 1rem;
     position: relative;
+    padding: 1rem;
+    background: var(--bs-dark);
+    border-radius: 0.5rem;
 }
 
 .chat-input form {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.75rem;
 }
 
 .chat-input input {
@@ -93,9 +101,11 @@
 /* Error message styles */
 .error-message {
     color: var(--bs-danger);
-    padding: 0.5rem;
-    margin: 0.5rem 0;
+    padding: 0.75rem;
+    margin: 0.75rem 0;
     display: none;
+    border-radius: 0.5rem;
+    background: rgba(var(--bs-danger-rgb), 0.1);
 }
 
 .error-message.visible {
@@ -104,13 +114,14 @@
 
 /* Chat list styles */
 .chat-list-item {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 
 .chat-item {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    padding: 0.75rem 1rem;
 }
 
 .chat-item.active {
@@ -120,16 +131,15 @@
 
 .delete-chat-btn {
     height: 100%;
-    padding: 0.5rem 1rem;  /* Increased padding */
+    padding: 0.5rem 1rem;
     align-self: stretch;
     opacity: 0.7;
     transition: opacity 0.2s;
-    font-size: 1.1rem;     /* Increased font size */
+    font-size: 1.1rem;
 }
 
-/* Update the trash icon size */
 .delete-chat-btn i {
-    font-size: 1.2rem;     /* Make the icon bigger */
+    font-size: 1.2rem;
 }
 
 .delete-chat-btn:hover {
@@ -138,4 +148,45 @@
 
 .chat-list-item:hover .delete-chat-btn {
     opacity: 1;
+}
+
+/* Updated container styles for better spacing */
+.container {
+    padding: 1.5rem;
+    max-width: 1400px;  /* Larger max-width for better use of space */
+}
+
+/* Sidebar improvements */
+.col-md-3 {
+    padding: 1rem;
+    background: var(--bs-dark);
+    border-radius: 0.5rem;
+    margin-right: 1rem;
+}
+
+/* Chat tags styling */
+.chat-tags {
+    margin-top: 0.5rem;
+}
+
+.chat-tags .badge {
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+    padding: 0.4rem 0.6rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .chat-container {
+        height: calc(100vh - 180px);
+    }
+    
+    .message {
+        max-width: 95%;
+    }
+    
+    .col-md-3 {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
 }
