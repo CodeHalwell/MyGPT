@@ -87,6 +87,9 @@
 }
 
 .delete-chat-btn {
+    height: 100%;
+    padding: 0.375rem 0.75rem;
+    align-self: stretch;
     opacity: 0.7;
     transition: opacity 0.2s;
 }
