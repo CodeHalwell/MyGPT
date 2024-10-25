@@ -30,8 +30,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Load the first chat if it exists
-    if (chatItems.length > 0) {
+    // Only load first chat if it exists and URL has no chat_id parameter
+    if (chatItems.length > 0 && !new URLSearchParams(window.location.search).has('chat_id')) {
         loadChat(chatItems[0].dataset.chatId);
     }
 });
@@ -106,7 +106,6 @@ async function loadChat(chatId) {
 
         // Apply syntax highlighting to code blocks
         document.querySelectorAll('pre code').forEach((block) => {
-            // Reset the highlighted state
             block.removeAttribute('data-highlighted');
             hljs.highlightElement(block);
         });
@@ -134,14 +133,31 @@ async function sendMessage(e) {
     e.preventDefault();
     console.log('Sending message');
     
-    if (!currentChatId) {
-        showError('No chat selected');
-        return;
-    }
-
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value.trim();
     if (!message) return;
+
+    // If no chat is selected, create a new one first
+    if (!currentChatId) {
+        try {
+            const response = await fetch('/chat/new', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to create new chat');
+            }
+            
+            const data = await response.json();
+            currentChatId = data.chat_id;
+        } catch (error) {
+            showError('Failed to create new chat: ' + error.message);
+            return;
+        }
+    }
 
     messageInput.value = '';
     appendMessage(message, 'user');
@@ -311,7 +327,6 @@ function appendMessage(content, role) {
     
     // Initialize syntax highlighting for new code blocks
     messageDiv.querySelectorAll('pre code').forEach((block) => {
-        // Reset the highlighted state
         block.removeAttribute('data-highlighted');
         hljs.highlightElement(block);
     });
