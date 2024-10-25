@@ -106,6 +106,8 @@ async function loadChat(chatId) {
 
         // Apply syntax highlighting to code blocks
         document.querySelectorAll('pre code').forEach((block) => {
+            // Reset the highlighted state
+            block.removeAttribute('data-highlighted');
             hljs.highlightElement(block);
         });
 
@@ -173,11 +175,6 @@ async function sendMessage(e) {
             if (event.data === '[DONE]') {
                 currentEventSource.close();
                 showLoading(false);
-                // Ensure final message is properly highlighted
-                document.querySelectorAll('pre code').forEach((block) => {
-                    hljs.highlightElement(block);
-                });
-                updateChatTitle(currentChatId);
                 return;
             }
 
@@ -190,8 +187,10 @@ async function sendMessage(e) {
             assistantResponse += event.data;
             responseDiv.innerHTML = formatCodeBlocks(assistantResponse);
             
-            // Apply syntax highlighting to any code blocks
+            // Immediately highlight any code blocks
             responseDiv.querySelectorAll('pre code').forEach((block) => {
+                // Reset the highlighted state
+                block.removeAttribute('data-highlighted');
                 hljs.highlightElement(block);
             });
             
@@ -264,10 +263,11 @@ async function updateChatTitle(chatId) {
 }
 
 function formatCodeBlocks(content) {
-    // First handle triple backtick blocks with proper line breaks
-    content = content.replace(/```([\w-]*)\n([\s\S]*?)\n```/g, (match, language, code) => {
-        language = language.trim() || 'plaintext';
-        // Ensure code maintains its line breaks
+    // Handle triple backtick blocks
+    content = content.replace(/```(\w+)?\n([\s\S]*?)\n```/g, (match, language, code) => {
+        language = language || 'plaintext';
+        // Remove any remaining backticks from the code
+        code = code.replace(/`/g, '');
         const formattedCode = code.trim()
             .split('\n')
             .map(line => escapeHtml(line))
@@ -275,23 +275,19 @@ function formatCodeBlocks(content) {
         return `<pre><code class="language-${language}">${formattedCode}</code></pre>`;
     });
     
-    // Handle inline code blocks
+    // Handle inline code blocks (single backticks)
     content = content.replace(/`([^`]+)`/g, (match, code) => {
         return `<code class="inline-code">${escapeHtml(code)}</code>`;
     });
     
-    // Convert URLs to links (only for non-code content)
+    // Handle regular line breaks
     const parts = content.split(/(<pre>.*?<\/pre>)/gs);
-    content = parts.map((part, index) => {
-        // If it's an odd index, it's a code block - leave it unchanged
+    return parts.map((part, index) => {
+        // If it's a code block, leave it unchanged
         if (index % 2 === 1) return part;
-        // For non-code parts, convert URLs to links and handle line breaks
-        return part
-            .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank">$1</a>')
-            .replace(/\n/g, '<br>');
+        // For non-code parts, convert newlines to <br>
+        return part.replace(/\n/g, '<br>');
     }).join('');
-    
-    return content;
 }
 
 function escapeHtml(text) {
@@ -314,6 +310,8 @@ function appendMessage(content, role) {
     
     // Initialize syntax highlighting for new code blocks
     messageDiv.querySelectorAll('pre code').forEach((block) => {
+        // Reset the highlighted state
+        block.removeAttribute('data-highlighted');
         hljs.highlightElement(block);
     });
 }
