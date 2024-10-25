@@ -9,13 +9,20 @@
         </div>
         <div class="list-group">
             {% for chat in chats %}
-            <div class="d-flex align-items-center chat-list-item">
-                <a href="#" class="list-group-item list-group-item-action chat-item flex-grow-1" data-chat-id="{{ chat.id }}">
-                    {{ chat.title or 'New Chat' }}
-                </a>
-                <button class="btn btn-sm btn-outline-danger delete-chat-btn ms-2" data-chat-id="{{ chat.id }}">
-                    <i class="bi bi-trash"></i>
-                </button>
+            <div class="d-flex flex-column chat-list-item">
+                <div class="d-flex align-items-center">
+                    <a href="#" class="list-group-item list-group-item-action chat-item flex-grow-1" data-chat-id="{{ chat.id }}">
+                        {{ chat.title or 'New Chat' }}
+                    </a>
+                    <button class="btn btn-sm btn-outline-danger delete-chat-btn ms-2" data-chat-id="{{ chat.id }}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                <div class="chat-tags ms-3 mt-1">
+                    {% for tag in chat.tags %}
+                    <span class="badge" style="background-color: {{ tag.color }}">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
             </div>
             {% endfor %}
         </div>

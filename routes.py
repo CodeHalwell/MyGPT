@@ -1,8 +1,8 @@
 from flask import render_template, redirect, url_for, request, flash, jsonify, Response, stream_with_context
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db
-from models import User, Chat, Message
-from chat_handler import get_ai_response_stream, generate_chat_summary
+from models import User, Chat, Message, Tag
+from chat_handler import get_ai_response_stream, generate_chat_summary, suggest_tags
 
 @app.route('/')
 @login_required
@@ -57,38 +57,52 @@ def admin():
         flash('Access denied. Admin privileges required.')
         return redirect(url_for('index'))
     users = User.query.all()
-    return render_template('admin.html', users=users)
+    tags = Tag.query.all()
+    return render_template('admin.html', users=users, tags=tags)
 
-@app.route('/admin/user/<int:user_id>/delete', methods=['POST'])
+@app.route('/admin/tag/new', methods=['POST'])
 @login_required
-def delete_user(user_id):
+def create_tag():
     if not current_user.is_admin:
         return jsonify({'error': 'Unauthorized'}), 403
-    user = User.query.get_or_404(user_id)
-    if user == current_user:
-        return jsonify({'error': 'Cannot delete yourself'}), 400
-    db.session.delete(user)
-    db.session.commit()
-    return jsonify({'success': True})
-
-@app.route('/admin/user/<int:user_id>/toggle-admin', methods=['POST'])
-@login_required
-def toggle_admin(user_id):
-    if not current_user.is_admin:
-        return jsonify({'error': 'Unauthorized'}), 403
-    if current_user.id == user_id:
-        return jsonify({'error': 'Cannot modify your own admin status'}), 400
+        
+    name = request.json.get('name', '').strip().lower()
+    color = request.json.get('color', '#6c757d')
     
-    user = User.query.get_or_404(user_id)
-    user.is_admin = request.json.get('is_admin', False)
+    if not name:
+        return jsonify({'error': 'Tag name is required'}), 400
+        
+    if Tag.query.filter_by(name=name).first():
+        return jsonify({'error': 'Tag already exists'}), 400
+        
+    tag = Tag(name=name, color=color)
+    db.session.add(tag)
     db.session.commit()
+    
+    return jsonify({
+        'id': tag.id,
+        'name': tag.name,
+        'color': tag.color
+    })
+
+@app.route('/admin/tag/<int:tag_id>', methods=['DELETE'])
+@login_required
+def delete_tag(tag_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    tag = Tag.query.get_or_404(tag_id)
+    db.session.delete(tag)
+    db.session.commit()
+    
     return jsonify({'success': True})
 
 @app.route('/chat')
 @login_required
 def chat():
     chats = Chat.query.filter_by(user_id=current_user.id).order_by(Chat.created_at.desc()).all()
-    return render_template('chat.html', chats=chats)
+    tags = Tag.query.all()
+    return render_template('chat.html', chats=chats, tags=tags)
 
 @app.route('/chat/new', methods=['POST'])
 @login_required
@@ -149,6 +163,12 @@ def stream_message(chat_id):
             # Generate and update chat summary
             all_messages = Message.query.filter_by(chat_id=chat_id).order_by(Message.timestamp).all()
             chat.title = generate_chat_summary(all_messages)
+            
+            # Suggest and add tags
+            suggested_tags = suggest_tags(all_messages)
+            existing_tags = Tag.query.filter(Tag.name.in_(suggested_tags)).all()
+            chat.tags = list(set(chat.tags + existing_tags))
+            
             db.session.commit()
             
             yield 'data: [DONE]\n\n'
@@ -187,7 +207,10 @@ def get_chat_title(chat_id):
     chat = Chat.query.get_or_404(chat_id)
     if chat.user_id != current_user.id:
         return jsonify({'error': 'Unauthorized'}), 403
-    return jsonify({'title': chat.title})
+    return jsonify({
+        'title': chat.title,
+        'tags': [{'id': t.id, 'name': t.name, 'color': t.color} for t in chat.tags]
+    })
 
 @app.route('/chat/<int:chat_id>/delete', methods=['POST'])
 @login_required
@@ -198,4 +221,18 @@ def delete_chat(chat_id):
     Message.query.filter_by(chat_id=chat_id).delete()
     db.session.delete(chat)
     db.session.commit()
+    return jsonify({'success': True})
+
+@app.route('/chat/<int:chat_id>/tags', methods=['POST'])
+@login_required
+def update_chat_tags(chat_id):
+    chat = Chat.query.get_or_404(chat_id)
+    if chat.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    tag_ids = request.json.get('tag_ids', [])
+    tags = Tag.query.filter(Tag.id.in_(tag_ids)).all()
+    chat.tags = tags
+    db.session.commit()
+    
     return jsonify({'success': True})
