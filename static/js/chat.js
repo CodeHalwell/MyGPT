@@ -205,7 +205,7 @@ async function deleteChat(chatId) {
             throw new Error('Failed to delete chat');
         }
 
-        const chatListItem = document.querySelector(`.chat-list-item[data-chat-id="${chatId}"]`);
+        const chatListItem = document.querySelector(`.chat-list-item:has(.chat-item[data-chat-id="${chatId}"])`);
         chatListItem.remove();
 
         // If deleted chat was current chat, clear messages
