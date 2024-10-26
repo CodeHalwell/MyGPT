@@ -69,9 +69,16 @@ def pending_approval():
     return render_template('pending_approval.html')
 
 @app.route('/logout')
+@login_required
 def logout():
-    logout_user()
-    return redirect(url_for('login'))
+    try:
+        logout_user()
+        flash('You have been logged out.')
+        return redirect(url_for('login'))
+    except Exception as e:
+        app.logger.error(f"Error during logout: {str(e)}")
+        flash('An error occurred during logout.')
+        return redirect(url_for('index'))
 
 @app.route('/admin')
 @login_required
