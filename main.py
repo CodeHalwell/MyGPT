@@ -26,7 +26,7 @@ def shutdown_session(exception=None):
 # For development server only
 if __name__ == "__main__":
     try:
-        # Get port from environment or default to 5000
+        # Use port 5000 as per flask_website blueprint
         port = int(os.environ.get('PORT', 5000))
         
         logger.info(f"Starting Flask development server on port {port}...")
@@ -39,6 +39,9 @@ if __name__ == "__main__":
             debug=True,      # Enable debug mode for development
             use_reloader=True  # Enable auto-reload on code changes
         )
+    except OSError as e:
+        logger.error(f"Port {port} is already in use. Please try a different port or stop any running server.")
+        raise
     except Exception as e:
         logger.error(f"Server error: {str(e)}")
         raise
