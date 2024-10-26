@@ -139,6 +139,37 @@ def admin():
                          serialized_users=serialized_users,
                          serialized_pending_users=serialized_pending_users)
 
+@app.route('/admin/user/<int:user_id>/approve', methods=['POST'])
+@login_required
+def approve_user(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        user = User.query.get_or_404(user_id)
+        
+        # Don't allow approving already approved users
+        if user.is_approved:
+            return jsonify({'error': 'User is already approved'}), 400
+        
+        # Don't allow approving admin users (they should be auto-approved)
+        if user.is_admin:
+            return jsonify({'error': 'Admin users are auto-approved'}), 400
+        
+        user.is_approved = True
+        db.session.commit()
+        
+        # Send approval email
+        email_sent = send_approval_email(user.email, user.username, approved=True)
+        if not email_sent:
+            app.logger.error(f"Failed to send approval email to user: {user.username}")
+        
+        return jsonify({'message': 'User approved successfully'})
+    except Exception as e:
+        app.logger.error(f"Error approving user: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/admin/user/<int:user_id>/reject', methods=['POST'])
 @login_required
 def reject_user(user_id):
