@@ -53,6 +53,67 @@ def index():
         return redirect(url_for('chat'))
     return redirect(url_for('login'))
 
+@app.route('/register', methods=['GET', 'POST'])
+@limiter.limit("5 per hour")
+def register():
+    """Handle user registration."""
+    if current_user.is_authenticated:
+        return redirect(url_for('chat'))
+    
+    if request.method == 'POST':
+        username = sanitize_input(request.form.get('username', ''))
+        email = sanitize_input(request.form.get('email', ''))
+        password = request.form.get('password', '')
+        
+        # Validate input
+        if not validate_username(username):
+            flash('Invalid username format. Use only letters, numbers, underscore, and hyphen.')
+            return redirect(url_for('register'))
+            
+        if not validate_email(email):
+            flash('Invalid email format.')
+            return redirect(url_for('register'))
+            
+        if not validate_password(password):
+            flash('Password must be at least 8 characters long and contain both letters and numbers.')
+            return redirect(url_for('register'))
+        
+        # Check if username or email already exists
+        if User.query.filter_by(username=username).first():
+            flash('Username already taken.')
+            return redirect(url_for('register'))
+            
+        if User.query.filter_by(email=email).first():
+            flash('Email already registered.')
+            return redirect(url_for('register'))
+        
+        # Create new user
+        user = User(username=username, email=email)
+        user.set_password(password)
+        
+        # Set as admin if it's the first user
+        if User.query.count() == 0:
+            user.is_admin = True
+            user.is_approved = True
+        
+        db.session.add(user)
+        try:
+            db.session.commit()
+            # Send emails
+            if not user.is_admin:  # Don't send emails for admin
+                send_registration_email(user.email, user.username)
+                send_admin_notification_email(user.email, user.username)
+            
+            flash('Registration successful! Please wait for admin approval.')
+            return redirect(url_for('pending_approval'))
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Registration error: {str(e)}")
+            flash('An error occurred during registration. Please try again.')
+            return redirect(url_for('register'))
+    
+    return render_template('register.html')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """Handle user login."""
@@ -171,3 +232,13 @@ def logout():
 def pending_approval():
     """Show pending approval page."""
     return render_template('pending_approval.html')
+
+# Error handlers
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return render_template('500.html'), 500
