@@ -8,7 +8,7 @@ openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 def get_ai_response_stream(messages: List[Dict[str, str]]) -> Iterator[str]:
     formatted_messages: List[ChatCompletionMessageParam] = [
-        {"role": m.role, "content": m.content}
+        {"role": m["role"], "content": m["content"]}
         for m in messages
     ]
     
@@ -75,7 +75,7 @@ Never put code on the same line as the backticks or language specification.'''
 
 def get_ai_response(messages: List[Dict[str, str]]) -> str:
     formatted_messages: List[ChatCompletionMessageParam] = [
-        {"role": m.role, "content": m.content}
+        {"role": m["role"], "content": m["content"]}
         for m in messages
     ]
     
@@ -91,7 +91,7 @@ def generate_chat_summary(messages: List[Dict[str, str]]) -> str:
         return "New Chat"
         
     formatted_messages: List[ChatCompletionMessageParam] = [
-        {"role": m.role, "content": m.content}
+        {"role": m["role"], "content": m["content"]}
         for m in messages
     ]
     
@@ -113,7 +113,7 @@ def suggest_tags(messages: List[Dict[str, str]]) -> Set[str]:
         return set()
         
     formatted_messages: List[ChatCompletionMessageParam] = [
-        {"role": m.role, "content": m.content}
+        {"role": m["role"], "content": m["content"]}
         for m in messages
     ]
     
