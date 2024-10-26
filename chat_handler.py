@@ -15,18 +15,24 @@ MODEL_MAPPING = {
     "gpt-3.5-turbo": "gpt-3.5-turbo"
 }
 
-def get_ai_response_stream(messages: List[Dict[str, str]], model: str = "gpt-4o") -> Iterator[str]:
+
+def get_ai_response_stream(messages: List[Dict[str, str]],
+                           model: str = "gpt-4o") -> Iterator[str]:
     # Map the model name to the actual OpenAI model
-    actual_model = MODEL_MAPPING.get(model, "gpt-4")
-    
-    formatted_messages: List[ChatCompletionMessageParam] = [
-        {"role": m["role"], "content": m["content"]}
-        for m in messages
-    ]
-    
+    actual_model = MODEL_MAPPING.get(model, "gpt-4o")
+
+    formatted_messages: List[ChatCompletionMessageParam] = [{
+        "role":
+        m["role"],
+        "content":
+        m["content"]
+    } for m in messages]
+
     system_message: ChatCompletionSystemMessageParam = {
-        "role": "system",
-        "content": '''You are a helpful assistant that answers generally queries to the user. You will help with with whatever you need to help with. You will answer in a way that is friendly and helpful. Should you be asked to write code;
+        "role":
+        "system",
+        "content":
+        '''You are a helpful assistant that answers generally queries to the user. You will help with with whatever you need to help with. You will answer in a way that is friendly and helpful. Should you be asked to write code;
         
         write clean, well-formatted code. When providing code examples:
 1. Always start with triple backticks and the language name on its own line
@@ -44,20 +50,17 @@ def example():
 Never put code on the same line as the backticks or language specification.'''
     }
     formatted_messages.insert(0, system_message)
-    
+
     response = openai_client.chat.completions.create(
-        model=actual_model,
-        messages=formatted_messages,
-        stream=True
-    )
-    
+        model=actual_model, messages=formatted_messages, stream=True)
+
     buffer = ""
-    
+
     for chunk in response:
         if chunk.choices[0].delta.content:
             content = chunk.choices[0].delta.content
             buffer += content
-            
+
             # Look for complete code blocks
             while True:
                 # Try to find a complete code block
@@ -67,76 +70,86 @@ Never put code on the same line as the backticks or language specification.'''
                     yield buffer
                     buffer = ""
                     break
-                    
+
                 # Look for the end of this code block
                 search_start = start + 3
                 end = buffer.find("```", search_start)
                 if end == -1:
                     # Code block not complete yet, keep in buffer
                     break
-                    
+
                 # We found a complete code block
                 # Yield everything before it
                 if start > 0:
                     yield buffer[:start]
-                    
+
                 # Yield the code block
                 code_block = buffer[start:end + 3]
                 yield code_block
-                
+
                 # Keep the rest in the buffer
                 buffer = buffer[end + 3:]
 
-def get_ai_response(messages: List[Dict[str, str]], model: str = "gpt-4o") -> str:
+
+def get_ai_response(messages: List[Dict[str, str]],
+                    model: str = "gpt-4o") -> str:
     # Map the model name to the actual OpenAI model
-    actual_model = MODEL_MAPPING.get(model, "gpt-4")
-    
-    formatted_messages: List[ChatCompletionMessageParam] = [
-        {"role": m["role"], "content": m["content"]}
-        for m in messages
-    ]
-    
+    actual_model = MODEL_MAPPING.get(model, "gpt-4o")
+
+    formatted_messages: List[ChatCompletionMessageParam] = [{
+        "role":
+        m["role"],
+        "content":
+        m["content"]
+    } for m in messages]
+
     response = openai_client.chat.completions.create(
-        model=actual_model,
-        messages=formatted_messages
-    )
-    
+        model=actual_model, messages=formatted_messages)
+
     return response.choices[0].message.content or ""
+
 
 def generate_chat_summary(messages: List[Dict[str, str]]) -> str:
     if not messages:
         return "New Chat"
-        
-    formatted_messages: List[ChatCompletionMessageParam] = [
-        {"role": m["role"], "content": m["content"]}
-        for m in messages
-    ]
-    
+
+    formatted_messages: List[ChatCompletionMessageParam] = [{
+        "role":
+        m["role"],
+        "content":
+        m["content"]
+    } for m in messages]
+
     summary_prompt: ChatCompletionSystemMessageParam = {
-        "role": "system",
-        "content": "Please provide a brief summary (max 50 characters) of the following conversation. Focus on the main topic or question being discussed."
+        "role":
+        "system",
+        "content":
+        "Please provide a brief summary (max 50 characters) of the following conversation. Focus on the main topic or question being discussed."
     }
-    
+
     response = openai_client.chat.completions.create(
-        model="gpt-4",
-        messages=[summary_prompt] + formatted_messages
-    )
-    
+        model="gpt-4o-mini", messages=[summary_prompt] + formatted_messages)
+
     return response.choices[0].message.content or ""
+
 
 def suggest_tags(messages: List[Dict[str, str]]) -> Set[str]:
     """Generate tag suggestions based on conversation content."""
     if not messages:
         return set()
-        
-    formatted_messages: List[ChatCompletionMessageParam] = [
-        {"role": m["role"], "content": m["content"]}
-        for m in messages
-    ]
-    
+
+    formatted_messages: List[ChatCompletionMessageParam] = [{
+        "role":
+        m["role"],
+        "content":
+        m["content"]
+    } for m in messages]
+
     tag_prompt: ChatCompletionSystemMessageParam = {
-        "role": "system",
-        "content": """Analyze the conversation and suggest 1-3 relevant tags.
+        "role":
+        "system",
+        "content":
+        """Analyze the conversation and suggest 1-3 relevant tags.
 Rules for tags:
 1. Use lowercase letters only
 2. Use single words or hyphenated phrases
@@ -144,12 +157,11 @@ Rules for tags:
 4. Respond with tags only, separated by commas
 Example response: python, algorithms, data-structures"""
     }
-    
-    response = openai_client.chat.completions.create(
-        model="gpt-4",
-        messages=[tag_prompt] + formatted_messages
-    )
-    
+
+    response = openai_client.chat.completions.create(model="gpt-4o-mini",
+                                                     messages=[tag_prompt] +
+                                                     formatted_messages)
+
     if response.choices[0].message.content:
         tags = response.choices[0].message.content.split(',')
         return {tag.strip().lower() for tag in tags if tag.strip()}

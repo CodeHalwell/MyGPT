@@ -18,9 +18,10 @@ def shutdown_session(exception=None):
             db_session.rollback()
         db_session.close()
 
+# For development server only
 if __name__ == "__main__":
     try:
-        logger.info("Starting Flask server...")
+        logger.info("Starting Flask development server...")
         app.run(host="0.0.0.0", port=5000, debug=True)
     except Exception as e:
         logger.error(f"Server error: {str(e)}")
