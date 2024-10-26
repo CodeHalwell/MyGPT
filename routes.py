@@ -17,6 +17,9 @@ def login():
     if request.method == 'POST':
         user = User.query.filter_by(username=request.form['username']).first()
         if user and user.check_password(request.form['password']):
+            if not user.is_approved and not user.is_admin:
+                flash('Your account is pending approval from an administrator.')
+                return redirect(url_for('login'))
             login_user(user)
             return redirect(url_for('index'))
         flash('Invalid username or password')
@@ -32,17 +35,28 @@ def register():
             flash('Username already exists')
             return redirect(url_for('register'))
         
+        if User.query.filter_by(email=request.form['email']).first():
+            flash('Email already registered')
+            return redirect(url_for('register'))
+        
         user = User()
         user.username = request.form['username']
         user.email = request.form['email']
         user.set_password(request.form['password'])
-        # Make the first user an admin
+        # Make the first user an admin and automatically approve them
         if User.query.count() == 0:
             user.is_admin = True
+            user.is_approved = True
         db.session.add(user)
         db.session.commit()
-        login_user(user)
-        return redirect(url_for('index'))
+        
+        if user.is_approved:
+            login_user(user)
+            return redirect(url_for('index'))
+        else:
+            flash('Your registration is pending approval from an administrator.')
+            return redirect(url_for('login'))
+            
     return render_template('register.html')
 
 @app.route('/logout')
@@ -58,7 +72,30 @@ def admin():
         return redirect(url_for('index'))
     users = User.query.all()
     tags = Tag.query.all()
-    return render_template('admin.html', users=users, tags=tags)
+    pending_users = User.query.filter_by(is_approved=False, is_admin=False).all()
+    return render_template('admin.html', users=users, tags=tags, pending_users=pending_users)
+
+@app.route('/admin/user/<int:user_id>/approve', methods=['POST'])
+@login_required
+def approve_user(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    user = User.query.get_or_404(user_id)
+    user.is_approved = True
+    db.session.commit()
+    return jsonify({'success': True})
+
+@app.route('/admin/user/<int:user_id>/reject', methods=['POST'])
+@login_required
+def reject_user(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'success': True})
 
 @app.route('/admin/user/<int:user_id>/delete', methods=['POST'])
 @login_required
