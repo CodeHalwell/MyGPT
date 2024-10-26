@@ -139,4 +139,39 @@ def admin():
                          serialized_users=serialized_users,
                          serialized_pending_users=serialized_pending_users)
 
+@app.route('/admin/user/<int:user_id>/reject', methods=['POST'])
+@login_required
+def reject_user(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        user = User.query.get_or_404(user_id)
+        
+        # Don't allow rejecting other admins
+        if user.is_admin:
+            return jsonify({'error': 'Cannot reject admin users'}), 400
+        
+        # Store user info before deletion for email
+        user_email = user.email
+        username = user.username
+        
+        # Delete all user's chats and messages
+        for chat in user.chats:
+            Message.query.filter_by(chat_id=chat.id).delete()
+            db.session.delete(chat)
+        
+        # Delete the user
+        db.session.delete(user)
+        db.session.commit()
+        
+        # Send rejection email
+        send_approval_email(user_email, username, approved=False)
+        
+        return jsonify({'message': 'User rejected successfully'})
+    except Exception as e:
+        app.logger.error(f"Error rejecting user: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 # Rest of your existing admin routes...
