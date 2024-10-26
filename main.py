@@ -5,7 +5,13 @@ from flask import g
 from app import db
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
 logger = logging.getLogger(__name__)
 
 @app.teardown_appcontext
@@ -18,11 +24,4 @@ def shutdown_session(exception=None):
             db_session.rollback()
         db_session.close()
 
-# For development server only
-if __name__ == "__main__":
-    try:
-        logger.info("Starting Flask development server...")
-        app.run(host="0.0.0.0", port=5000, debug=True)
-    except Exception as e:
-        logger.error(f"Server error: {str(e)}")
-        raise
+# The development server block is removed as we're using Gunicorn in production
