@@ -15,4 +15,6 @@ dependencies = [
     "gunicorn>=23.0.0",
     "whitenoise>=6.7.0",
     "flask-talisman>=1.1.0",
+    "gevent>=24.10.3",
+    "greenlet>=3.1.1",
 ]
