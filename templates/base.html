@@ -24,6 +24,7 @@
                 {% if current_user.is_admin %}
                 <a class="nav-item nav-link" href="{{ url_for('admin') }}">Admin</a>
                 {% endif %}
+                <a class="nav-item nav-link" href="{{ url_for('settings') }}">Settings</a>
                 <span class="nav-item nav-link">Welcome, {{ current_user.username }}</span>
                 <a class="nav-item nav-link" href="{{ url_for('logout') }}">Logout</a>
             </div>
