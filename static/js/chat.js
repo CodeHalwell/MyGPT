@@ -72,54 +72,9 @@ async function createNewChat() {
         
         const data = await response.json();
         console.log('New chat created:', data);
-        if (data.chat_id) {
-            currentChatId = data.chat_id;
-            // Add new chat to the list without full page reload
-            const chatList = document.querySelector('.list-group');
-            const newChatItem = document.createElement('div');
-            newChatItem.className = 'd-flex flex-column chat-list-item';
-            newChatItem.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <a href="#" class="list-group-item list-group-item-action chat-item active" data-chat-id="${data.chat_id}">
-                        ${data.title}
-                    </a>
-                    <button class="btn btn-sm btn-outline-danger delete-chat-btn ms-2" data-chat-id="${data.chat_id}">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-                <div class="chat-tags ms-3 mt-1"></div>
-            `;
-            
-            // Add event listeners to new elements
-            const chatItemLink = newChatItem.querySelector('.chat-item');
-            const deleteBtn = newChatItem.querySelector('.delete-chat-btn');
-            
-            chatItemLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                loadChat(data.chat_id);
-            });
-            
-            deleteBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                deleteChat(data.chat_id);
-            });
-            
-            // Insert at the beginning of the list
-            chatList.insertBefore(newChatItem, chatList.firstChild);
-            
-            // Clear existing messages
-            document.getElementById('chatMessages').innerHTML = '';
-            
-            // Update active state
-            document.querySelectorAll('.chat-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            chatItemLink.classList.add('active');
-        } else {
-            throw new Error('Invalid response from server');
-        }
+        currentChatId = data.chat_id;
+        location.reload(); // Keep this for new chat creation as we need to update the sidebar
     } catch (error) {
-        console.error('Error creating chat:', error);
         showError('Failed to create new chat: ' + error.message);
     } finally {
         showLoading(false);
@@ -200,13 +155,7 @@ async function sendMessage(e) {
             }
             
             const data = await response.json();
-            if (!data.chat_id) {
-                throw new Error('Invalid response from server');
-            }
             currentChatId = data.chat_id;
-            // Reload the page to show the new chat
-            location.reload();
-            return;
         } catch (error) {
             showError('Failed to create new chat: ' + error.message);
             return;
@@ -245,47 +194,32 @@ async function sendMessage(e) {
             if (event.data === '[DONE]') {
                 currentEventSource.close();
                 showLoading(false);
-                
-                // Apply final formatting and highlighting
-                if (responseDiv) {
-                    responseDiv.innerHTML = `<div class="model-info">Model: ${model}</div>` + formatCodeBlocks(assistantResponse);
-                    responseDiv.querySelectorAll('pre code').forEach((block) => {
-                        block.removeAttribute('data-highlighted');
-                        hljs.highlightElement(block);
-                    });
-                    
-                    // Update chat title if this is a new chat
-                    const chatItem = document.querySelector(`.chat-item[data-chat-id="${currentChatId}"]`);
-                    if (chatItem && chatItem.textContent === 'New Chat') {
-                        updateChatTitle(currentChatId);
-                    }
-                }
-                
-                // Ensure the last message is visible
-                responseDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                // Refresh the chat after response is complete
+                loadChat(currentChatId);
                 return;
             }
 
             if (!responseDiv) {
                 responseDiv = document.createElement('div');
                 responseDiv.className = 'message assistant';
+                // Add model information at the top of assistant message
+                const modelInfo = document.createElement('div');
+                modelInfo.className = 'model-info';
+                modelInfo.textContent = `Model: ${model}`;
+                responseDiv.appendChild(modelInfo);
                 document.getElementById('chatMessages').appendChild(responseDiv);
             }
 
             assistantResponse += event.data;
-            // Format and highlight code continuously as it streams in
             responseDiv.innerHTML = `<div class="model-info">Model: ${model}</div>` + formatCodeBlocks(assistantResponse);
             
-            // Highlight any complete code blocks
+            // Immediately highlight any code blocks
             responseDiv.querySelectorAll('pre code').forEach((block) => {
-                if (!block.hasAttribute('data-highlighted')) {
-                    hljs.highlightElement(block);
-                    block.setAttribute('data-highlighted', 'true');
-                }
+                block.removeAttribute('data-highlighted');
+                hljs.highlightElement(block);
             });
             
-            // Smooth scroll to follow the response
-            responseDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            responseDiv.scrollIntoView({ behavior: 'smooth' });
         };
 
         currentEventSource.onerror = function(error) {
@@ -318,9 +252,7 @@ async function deleteChat(chatId) {
         }
 
         const chatListItem = document.querySelector(`.chat-list-item:has(.chat-item[data-chat-id="${chatId}"])`);
-        if (chatListItem) {
-            chatListItem.remove();
-        }
+        chatListItem.remove();
 
         // If deleted chat was current chat, clear messages
         if (currentChatId === chatId) {
