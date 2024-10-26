@@ -1,0 +1,117 @@
+2024-10-26 22:08:14,731 ERROR: Exception on / [GET] [in /home/runner/MyGPTApp/.pythonlibs/lib/python3.11/site-packages/flask/app.py:838]
+Traceback (most recent call last):
+  File "/home/runner/MyGPTApp/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/MyGPTApp/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 854, in dispatch_request
+    self.raise_routing_exception(req)
+  File "/home/runner/MyGPTApp/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 463, in raise_routing_exception
+    raise request.routing_exception  # type: ignore[misc]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/MyGPTApp/.pythonlibs/lib/python3.11/site-packages/flask/ctx.py", line 362, in match_request
+    result = self.url_adapter.match(return_rule=True)  # type: ignore
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/MyGPTApp/.pythonlibs/lib/python3.11/site-packages/werkzeug/routing/map.py", line 629, in match
+    raise NotFound() from None
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/runner/MyGPTApp/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/MyGPTApp/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/MyGPTApp/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 765, in handle_user_exception
+    return self.handle_http_exception(e)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/MyGPTApp/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 740, in handle_http_exception
+    return self.ensure_sync(handler)(e)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/MyGPTApp/routes.py", line 223, in not_found_error
+    return render_template('errors/404.html'), 404
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/MyGPTApp/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/MyGPTApp/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/MyGPTApp/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 1304, in render
+    self.environment.handle_exception()
+  File "/home/runner/MyGPTApp/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 939, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/runner/MyGPTApp/templates/errors/404.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "/home/runner/MyGPTApp/templates/base.html", line 21, in top-level template code
+    <a class="navbar-brand" href="{{ url_for('index') }}">AI Chat Assistant</a>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/MyGPTApp/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1084, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/MyGPTApp/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1073, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/MyGPTApp/.pythonlibs/lib/python3.11/site-packages/werkzeug/routing/map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'index'. Did you mean 'login' instead?
+2024-10-26 22:08:14,735 ERROR: Internal server error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application. [in /home/runner/MyGPTApp/routes.py:228]
+2024-10-26 22:08:40,780 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:40,781 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:41,279 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:41,283 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:41,317 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:41,320 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:41,410 INFO: Database tables and indexes created successfully [in /home/runner/MyGPTApp/app.py:130]
+2024-10-26 22:08:41,484 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:41,484 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:41,580 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:41,583 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:41,922 INFO: Database tables and indexes created successfully [in /home/runner/MyGPTApp/app.py:130]
+2024-10-26 22:08:41,987 INFO: Database tables and indexes created successfully [in /home/runner/MyGPTApp/app.py:130]
+2024-10-26 22:08:42,084 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:42,086 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:42,116 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:42,113 INFO: Database tables and indexes created successfully [in /home/runner/MyGPTApp/app.py:130]
+2024-10-26 22:08:42,118 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:42,213 INFO: Database tables and indexes created successfully [in /home/runner/MyGPTApp/app.py:130]
+2024-10-26 22:08:42,279 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:42,281 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:42,412 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:42,415 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:42,579 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:42,585 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:42,711 INFO: Database tables and indexes created successfully [in /home/runner/MyGPTApp/app.py:130]
+2024-10-26 22:08:42,711 INFO: Database tables and indexes created successfully [in /home/runner/MyGPTApp/app.py:130]
+2024-10-26 22:08:42,898 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:42,899 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:42,911 INFO: Database tables and indexes created successfully [in /home/runner/MyGPTApp/app.py:130]
+2024-10-26 22:08:42,985 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:42,987 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:43,079 INFO: Database tables and indexes created successfully [in /home/runner/MyGPTApp/app.py:130]
+2024-10-26 22:08:43,244 INFO: Database tables and indexes created successfully [in /home/runner/MyGPTApp/app.py:130]
+2024-10-26 22:08:43,409 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:43,410 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:43,511 INFO: Database tables and indexes created successfully [in /home/runner/MyGPTApp/app.py:130]
+2024-10-26 22:08:43,513 INFO: Database tables and indexes created successfully [in /home/runner/MyGPTApp/app.py:130]
+2024-10-26 22:08:43,579 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:43,584 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:43,797 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:43,805 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:43,885 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:43,887 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:43,891 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:43,892 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:43,988 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:43,990 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:43,998 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:43,999 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:44,078 INFO: Database tables and indexes created successfully [in /home/runner/MyGPTApp/app.py:130]
+2024-10-26 22:08:44,096 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:08:44,097 INFO: Extensions initialized successfully [in /home/runner/MyGPTApp/app.py:96]
+2024-10-26 22:08:44,378 INFO: Database tables and indexes created successfully [in /home/runner/MyGPTApp/app.py:130]
+2024-10-26 22:08:44,611 INFO: Database tables and indexes created successfully [in /home/runner/MyGPTApp/app.py:130]
+2024-10-26 22:08:44,678 INFO: Database tables and indexes created successfully [in /home/runner/MyGPTApp/app.py:130]
+2024-10-26 22:08:44,878 INFO: Database tables and indexes created successfully [in /home/runner/MyGPTApp/app.py:130]

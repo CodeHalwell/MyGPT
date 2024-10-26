@@ -14,4 +14,7 @@ dependencies = [
     "sendgrid>=6.11.0",
     "gunicorn>=23.0.0",
     "whitenoise>=6.7.0",
+    "flask-wtf>=1.2.2",
+    "flask-limiter>=3.8.0",
+    "tenacity>=9.0.0",
 ]
