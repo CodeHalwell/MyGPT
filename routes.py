@@ -56,8 +56,7 @@ def register():
             login_user(user)
             return redirect(url_for('index'))
         else:
-            flash('Your registration is pending approval from an administrator.')
-            return redirect(url_for('login'))
+            return render_template('pending_approval.html')
             
     return render_template('register.html')
 
@@ -126,6 +125,21 @@ def delete_user(user_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/admin/user/<int:user_id>/toggle-admin', methods=['POST'])
+@login_required
+def toggle_admin(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    if user_id == current_user.id:
+        return jsonify({'error': 'Cannot modify your own admin status'}), 400
+        
+    user = User.query.get_or_404(user_id)
+    user.is_admin = request.json.get('is_admin', False)
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
 @app.route('/admin/tag/new', methods=['POST'])
 @login_required
 def create_tag():
@@ -167,7 +181,8 @@ def delete_tag(tag_id):
 @login_required
 def chat():
     chats = Chat.query.filter_by(user_id=current_user.id).order_by(Chat.created_at.desc()).all()
-    return render_template('chat.html', chats=chats)
+    tags = Tag.query.all()
+    return render_template('chat.html', chats=chats, tags=tags)
 
 @app.route('/chat/new', methods=['POST'])
 @login_required
