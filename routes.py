@@ -66,7 +66,6 @@ def delete_user(user_id):
     if not current_user.is_admin:
         return jsonify({'error': 'Unauthorized'}), 403
     
-    # Prevent self-deletion
     if user_id == current_user.id:
         return jsonify({'error': 'Cannot delete your own account'}), 400
         
@@ -77,16 +76,16 @@ def delete_user(user_id):
         for chat in user.chats:
             Message.query.filter_by(chat_id=chat.id).delete()
         
-        # Delete all chats
+        # Delete user's chats
         Chat.query.filter_by(user_id=user_id).delete()
         
-        # Finally delete the user
+        # Delete the user
         db.session.delete(user)
         db.session.commit()
         return jsonify({'success': True})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': f'Failed to delete user: {str(e)}'}), 500
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/admin/tag/new', methods=['POST'])
 @login_required
