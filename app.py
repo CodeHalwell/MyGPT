@@ -32,14 +32,14 @@ def create_app():
         max_age=31536000
     )
     
-    # Add ProxyFix middleware with appropriate settings
+    # Configure ProxyFix for proper header handling behind Replit's proxy
     app.wsgi_app = ProxyFix(
         app.wsgi_app,
-        x_for=1,
-        x_proto=1,
-        x_host=1,
-        x_port=1,
-        x_prefix=1
+        x_for=1,      # Number of proxy servers
+        x_proto=1,    # SSL termination happens at proxy
+        x_host=1,     # Original host header
+        x_port=1,     # Original port
+        x_prefix=1    # Handle proxy path rewrites
     )
     
     # Security settings
@@ -70,7 +70,7 @@ def create_app():
         login_manager.login_view = 'login'
         logger.info("Database and login manager initialized successfully")
         
-        # Initialize Talisman with security headers
+        # Initialize Talisman with security headers for Replit environment
         Talisman(
             app,
             force_https=True,
@@ -82,8 +82,10 @@ def create_app():
                 'script-src': "'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com cdn.replit.com",
                 'style-src': "'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com cdn.replit.com",
                 'font-src': "'self' cdn.jsdelivr.net cdnjs.cloudflare.com",
-                'connect-src': "'self'"
-            }
+                'connect-src': "'self' *"  # Updated to allow SSE connections
+            },
+            content_security_policy_nonce_in=['script-src'],
+            force_file_save=True
         )
         
     except Exception as e:
