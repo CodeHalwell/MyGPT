@@ -78,12 +78,14 @@ def send_approval_email(user_email, username, approved=True):
         return False
         
     try:
+        domain = f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER')}.repl.co"
+        
         if approved:
             subject = 'Account Approved - AI Chat Assistant'
             content = f'''
                 <h2>Welcome aboard, {username}!</h2>
                 <p>Your account has been approved. You can now log in and start using the AI Chat Assistant.</p>
-                <p>Click <a href="https://{os.environ.get('REPL_SLUG', '')}.{os.environ.get('REPL_OWNER', '')}.repl.co/login">here</a> to login.</p>
+                <p>Click <a href="{domain}/login">here</a> to login.</p>
             '''
         else:
             subject = 'Account Registration Update - AI Chat Assistant'
@@ -118,6 +120,9 @@ def send_password_reset_email(user_email, username, reset_token):
         return False
         
     try:
+        domain = f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER')}.repl.co"
+        reset_link = f"{domain}/reset_password/{reset_token}"
+        
         message = Mail(
             from_email=FROM_EMAIL,
             to_emails=user_email,
@@ -126,7 +131,7 @@ def send_password_reset_email(user_email, username, reset_token):
                 <h2>Password Reset Request</h2>
                 <p>Hello {username},</p>
                 <p>We received a request to reset your password. Click the link below to set a new password:</p>
-                <p><a href="https://{os.environ.get('REPL_SLUG', '')}.{os.environ.get('REPL_OWNER', '')}.repl.co/reset_password/{reset_token}">Reset Password</a></p>
+                <p><a href="{reset_link}">Reset Password</a></p>
                 <p>If you didn't request this, please ignore this email.</p>
                 <p>This link will expire in 1 hour.</p>
             '''
