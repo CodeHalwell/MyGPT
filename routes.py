@@ -98,6 +98,102 @@ def chat():
     chats = Chat.query.filter_by(user_id=current_user.id).order_by(Chat.created_at.desc()).all()
     return render_template('chat.html', chats=chats)
 
+@app.route('/chat/new', methods=['POST'])
+@login_required
+def create_chat():
+    try:
+        # Create a new chat for the current user
+        chat = Chat(user_id=current_user.id, title="New Chat")
+        db.session.add(chat)
+        db.session.commit()
+        
+        return jsonify({
+            'chat_id': chat.id,
+            'title': chat.title
+        })
+    except Exception as e:
+        app.logger.error(f"Error creating chat: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': 'Failed to create chat'}), 500
+
+@app.route('/chat/<int:chat_id>/message', methods=['POST'])
+@login_required
+def save_message(chat_id):
+    chat = Chat.query.get_or_404(chat_id)
+    if chat.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    try:
+        data = request.get_json()
+        message = Message(
+            chat_id=chat_id,
+            content=data['message'],
+            role='user'
+        )
+        db.session.add(message)
+        db.session.commit()
+        return jsonify({'message': 'Message saved successfully'})
+    except Exception as e:
+        app.logger.error(f"Error saving message: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': 'Failed to save message'}), 500
+
+@app.route('/chat/<int:chat_id>/message/stream')
+@login_required
+def stream_ai_response(chat_id):
+    chat = Chat.query.get_or_404(chat_id)
+    if chat.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    messages = [{'role': m.role, 'content': m.content} for m in chat.messages]
+    
+    def generate():
+        try:
+            for token in get_ai_response_stream(messages):
+                yield f"data: {token}\n\n"
+                
+            # Save the complete AI response
+            complete_response = "".join(get_ai_response_stream(messages))
+            message = Message(
+                chat_id=chat_id,
+                content=complete_response,
+                role='assistant'
+            )
+            db.session.add(message)
+            
+            # Update chat title after first exchange if it's still default
+            if chat.title == "New Chat" and len(chat.messages) <= 2:
+                chat.title = generate_chat_summary(messages + [{'role': 'assistant', 'content': complete_response}])
+            
+            # Generate and add tags
+            if len(chat.messages) <= 2:
+                new_tags = suggest_tags(messages + [{'role': 'assistant', 'content': complete_response}])
+                for tag_name in new_tags:
+                    tag = Tag.query.filter_by(name=tag_name).first()
+                    if not tag:
+                        tag = Tag(name=tag_name)
+                        db.session.add(tag)
+                    if tag not in chat.tags:
+                        chat.tags.append(tag)
+            
+            db.session.commit()
+            yield "data: [DONE]\n\n"
+            
+        except Exception as e:
+            app.logger.error(f"Error in stream_ai_response: {str(e)}")
+            db.session.rollback()
+            yield f"data: Error generating response: {str(e)}\n\n"
+            
+    return Response(stream_with_context(generate()), mimetype='text/event-stream')
+
+@app.route('/chat/<int:chat_id>/title')
+@login_required
+def get_chat_title(chat_id):
+    chat = Chat.query.get_or_404(chat_id)
+    if chat.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    return jsonify({'title': chat.title})
+
 @app.route('/chat/<int:chat_id>/messages')
 @login_required
 def get_chat_messages(chat_id):
@@ -236,5 +332,3 @@ def delete_user(user_id):
         app.logger.error(f"Error deleting user: {str(e)}")
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
-
-# Rest of your existing admin routes...
