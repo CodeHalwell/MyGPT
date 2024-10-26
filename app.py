@@ -6,8 +6,6 @@ from sqlalchemy.orm import DeclarativeBase
 import logging
 from werkzeug.middleware.proxy_fix import ProxyFix
 from whitenoise import WhiteNoise
-from security import limiter, talisman
-from logging.handlers import RotatingFileHandler
 
 logger = logging.getLogger(__name__)
 
@@ -19,18 +17,6 @@ login_manager = LoginManager()
 
 def create_app():
     app = Flask(__name__)
-    
-    # Configure logging
-    if not os.path.exists('logs'):
-        os.mkdir('logs')
-    file_handler = RotatingFileHandler('logs/app.log', maxBytes=10240, backupCount=10)
-    file_handler.setFormatter(logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-    ))
-    file_handler.setLevel(logging.INFO)
-    app.logger.addHandler(file_handler)
-    app.logger.setLevel(logging.INFO)
-    app.logger.info('Application startup')
     
     # Configure static files
     app.static_folder = 'static'
@@ -48,17 +34,7 @@ def create_app():
     # Add ProxyFix middleware
     app.wsgi_app = ProxyFix(app.wsgi_app)
     
-    # Initialize security features
-    limiter.init_app(app)
-    talisman.init_app(app)
-    
-    # Set secure session configuration
-    app.config['SESSION_COOKIE_SECURE'] = True
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 minutes
-    
-    app.secret_key = os.environ.get("FLASK_SECRET_KEY") or os.urandom(24)
+    app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "a secret key"
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
         "pool_recycle": 300,
@@ -75,7 +51,6 @@ def create_app():
         db.init_app(app)
         login_manager.init_app(app)
         login_manager.login_view = 'login'
-        login_manager.session_protection = "strong"
         logger.info("Database and login manager initialized successfully")
     except Exception as e:
         logger.error(f"Error initializing extensions: {str(e)}")
