@@ -9,6 +9,44 @@
         </a>
     </div>
     
+    <!-- Pending Approvals Section -->
+    {% if pending_users %}
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h3 class="h5 mb-0">Pending User Approvals</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in pending_users %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <button class="btn btn-success btn-sm" onclick="approveUser({{ user.id }})">
+                                    <i class="bi bi-check-lg"></i> Approve
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="rejectUser({{ user.id }})">
+                                    <i class="bi bi-x-lg"></i> Reject
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
     <!-- Users Section -->
     <h3 class="mb-3">Users</h3>
     <div class="table-responsive mb-5">
@@ -19,6 +57,7 @@
                     <th>Username</th>
                     <th>Email</th>
                     <th>Number of Chats</th>
+                    <th>Status</th>
                     <th>Admin Status</th>
                     <th>Actions</th>
                 </tr>
@@ -30,6 +69,13 @@
                     <td>{{ user.username }}</td>
                     <td>{{ user.email }}</td>
                     <td>{{ user.chats|length }}</td>
+                    <td>
+                        {% if user.is_approved %}
+                        <span class="badge bg-success">Approved</span>
+                        {% else %}
+                        <span class="badge bg-warning">Pending</span>
+                        {% endif %}
+                    </td>
                     <td>
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" 
@@ -107,6 +153,54 @@
 </div>
 
 <script>
+async function approveUser(userId) {
+    if (!confirm('Are you sure you want to approve this user?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/admin/user/${userId}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            const data = await response.json();
+            alert(data.error || 'Failed to approve user');
+        }
+    } catch (error) {
+        alert('Error approving user: ' + error.message);
+    }
+}
+
+async function rejectUser(userId) {
+    if (!confirm('Are you sure you want to reject this user? This will delete their account.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/admin/user/${userId}/reject`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            const data = await response.json();
+            alert(data.error || 'Failed to reject user');
+        }
+    } catch (error) {
+        alert('Error rejecting user: ' + error.message);
+    }
+}
+
 async function deleteUser(userId) {
     if (!confirm('Are you sure you want to delete this user?')) {
         return;
