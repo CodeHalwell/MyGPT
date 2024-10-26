@@ -1,8 +1,11 @@
 from app import app
 import routes  # noqa: F401
 import logging
-from flask import g
+from flask import g, jsonify
 from app import db
+from werkzeug.exceptions import HTTPException
+import sys
+import traceback
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -17,6 +20,38 @@ def shutdown_session(exception=None):
             logger.error(f"Database error during request: {str(exception)}")
             db_session.rollback()
         db_session.close()
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Handle all exceptions."""
+    # Log the full stack trace
+    exc_info = sys.exc_info()
+    logger.error("".join(traceback.format_exception(*exc_info)))
+    
+    # Handle HTTP exceptions
+    if isinstance(e, HTTPException):
+        response = e.get_response()
+        response.data = jsonify({
+            "code": e.code,
+            "name": e.name,
+            "description": e.description,
+        }).data
+        response.content_type = "application/json"
+        return response
+    
+    # Handle other exceptions
+    return jsonify({
+        "error": "Internal Server Error",
+        "description": "An unexpected error occurred"
+    }), 500
+
+@app.after_request
+def after_request(response):
+    """Add security headers to every response."""
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
 
 # For development server only
 if __name__ == "__main__":
