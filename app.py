@@ -23,8 +23,8 @@ login_manager = LoginManager()
 def create_app():
     app = Flask(__name__)
     
-    # Configure static files
-    app.static_folder = 'static'
+    # Configure static files with absolute path
+    app.static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
     app.static_url_path = '/static'
     
     # Configure WhiteNoise for production static file serving
@@ -33,7 +33,8 @@ def create_app():
         root=app.static_folder,
         prefix=app.static_url_path,
         autorefresh=False,  # Disable autorefresh in production
-        max_age=31536000  # Cache for 1 year
+        max_age=31536000,  # Cache for 1 year
+        index_file=False
     )
     
     # Add ProxyFix middleware for proper header handling behind Replit's proxy

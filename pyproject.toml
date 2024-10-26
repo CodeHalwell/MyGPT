@@ -14,4 +14,5 @@ dependencies = [
     "sendgrid>=6.11.0",
     "gunicorn>=23.0.0",
     "whitenoise>=6.7.0",
+    "waitress>=3.0.0",
 ]

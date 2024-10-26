@@ -45,13 +45,8 @@ if __name__ == "__main__":
     try:
         port = int(os.environ.get("PORT", 5000))
         logger.info(f"Starting Flask production server on port {port}...")
-        app.run(
-            host="0.0.0.0",
-            port=port,
-            debug=False,
-            use_reloader=False,  # Disable reloader in production
-            threaded=True
-        )
+        from waitress import serve
+        serve(app, host="0.0.0.0", port=port, threads=6)
     except Exception as e:
         logger.error(f"Server error: {str(e)}")
         raise
