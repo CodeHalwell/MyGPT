@@ -1,9 +1,52 @@
+import random
 from flask import render_template, redirect, url_for, request, flash, jsonify, Response, stream_with_context
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db
 from models import User, Chat, Message, Tag
 from chat_handler import get_ai_response_stream, generate_chat_summary, suggest_tags
 from email_handler import send_registration_email, send_approval_email, send_admin_notification_email
+
+def generate_random_color():
+    # Generate random HSL color for better readability
+    hue = random.randint(0, 360)
+    saturation = random.randint(50, 90)  # Avoid too gray (low saturation) colors
+    lightness = random.randint(35, 65)   # Avoid too light/dark colors
+    
+    # Convert HSL to hex
+    def hsl_to_hex(h, s, l):
+        h = h / 360
+        s = s / 100
+        l = l / 100
+        
+        def hue_to_rgb(p, q, t):
+            if t < 0:
+                t += 1
+            if t > 1:
+                t -= 1
+            if t < 1/6:
+                return p + (q - p) * 6 * t
+            if t < 1/2:
+                return q
+            if t < 2/3:
+                return p + (q - p) * (2/3 - t) * 6
+            return p
+            
+        if s == 0:
+            r = g = b = l
+        else:
+            q = l * (1 + s) if l < 0.5 else l + s - l * s
+            p = 2 * l - q
+            r = hue_to_rgb(p, q, h + 1/3)
+            g = hue_to_rgb(p, q, h)
+            b = hue_to_rgb(p, q, h - 1/3)
+            
+        return '#{:02x}{:02x}{:02x}'.format(
+            int(r * 255),
+            int(g * 255),
+            int(b * 255)
+        )
+    
+    return hsl_to_hex(hue, saturation, lightness)
 
 @app.route('/')
 @login_required
@@ -97,7 +140,9 @@ def chat():
 @login_required
 def create_chat():
     try:
-        chat = Chat(user_id=current_user.id, title="New Chat")
+        chat = Chat()
+        chat.user_id = current_user.id
+        chat.title = "New Chat"
         db.session.add(chat)
         db.session.commit()
         
@@ -119,11 +164,10 @@ def save_message(chat_id):
         
     try:
         data = request.get_json()
-        message = Message(
-            chat_id=chat_id,
-            content=data['message'],
-            role='user'
-        )
+        message = Message()
+        message.chat_id = chat_id
+        message.content = data['message']
+        message.role = 'user'
         db.session.add(message)
         db.session.commit()
         return jsonify({'message': 'Message saved successfully'})
@@ -149,11 +193,10 @@ def stream_ai_response(chat_id):
                 
             # Save the complete AI response
             complete_response = "".join(get_ai_response_stream(messages, model=model))
-            message = Message(
-                chat_id=chat_id,
-                content=complete_response,
-                role='assistant'
-            )
+            message = Message()
+            message.chat_id = chat_id
+            message.content = complete_response
+            message.role = 'assistant'
             db.session.add(message)
             
             # Update chat title after first exchange if it's still default
@@ -166,7 +209,9 @@ def stream_ai_response(chat_id):
                 for tag_name in new_tags:
                     tag = Tag.query.filter_by(name=tag_name).first()
                     if not tag:
-                        tag = Tag(name=tag_name)
+                        tag = Tag()
+                        tag.name = tag_name
+                        tag.color = generate_random_color()  # Add random color
                         db.session.add(tag)
                     if tag not in chat.tags:
                         chat.tags.append(tag)
