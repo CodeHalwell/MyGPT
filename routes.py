@@ -3,6 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db
 from models import User, Chat, Message, Tag
 from chat_handler import get_ai_response_stream, generate_chat_summary, suggest_tags
+from email_handler import send_registration_email, send_approval_email
 
 @app.route('/')
 @login_required
@@ -44,22 +45,24 @@ def register():
         user.email = request.form['email']
         user.set_password(request.form['password'])
         
-        # Check if this is the admin user using environment variables
         if (user.username == app.config['ADMIN_USERNAME'] and 
             user.email == app.config['ADMIN_EMAIL']):
             user.is_admin = True
             user.is_approved = True
         else:
-            user.is_approved = False  # All other users need approval
+            user.is_approved = False
         
         db.session.add(user)
         db.session.commit()
         
-        if user.is_approved:  # Only admin user
+        if not user.is_admin:
+            send_registration_email(user.email, user.username)
+            flash('Your registration is pending approval from an administrator. You will receive an email when your account is approved.')
+        
+        if user.is_approved:
             login_user(user)
             return redirect(url_for('index'))
         
-        flash('Your registration is pending approval from an administrator.')
         return render_template('pending_approval.html')
             
     return render_template('register.html')
@@ -87,7 +90,6 @@ def admin():
         flash('Access denied. Admin privileges required.')
         return redirect(url_for('index'))
     
-    # Serialize users data
     users = User.query.all()
     serialized_users = [{
         'id': user.id,
@@ -98,7 +100,6 @@ def admin():
         'chats_count': len(user.chats)
     } for user in users]
     
-    # Serialize pending users data
     pending_users = User.query.filter_by(is_approved=False, is_admin=False).all()
     serialized_pending_users = [{
         'id': user.id,
@@ -108,9 +109,9 @@ def admin():
     
     tags = Tag.query.all()
     return render_template('admin.html', 
-                         users=users,  # Keep original for template iteration
+                         users=users,
                          tags=tags, 
-                         pending_users=pending_users,  # Keep original for template iteration
+                         pending_users=pending_users,
                          serialized_users=serialized_users,
                          serialized_pending_users=serialized_pending_users)
 
@@ -123,6 +124,9 @@ def approve_user(user_id):
     user = User.query.get_or_404(user_id)
     user.is_approved = True
     db.session.commit()
+    
+    send_approval_email(user.email, user.username, approved=True)
+    
     return jsonify({'success': True})
 
 @app.route('/admin/user/<int:user_id>/reject', methods=['POST'])
@@ -132,6 +136,9 @@ def reject_user(user_id):
         return jsonify({'error': 'Unauthorized'}), 403
     
     user = User.query.get_or_404(user_id)
+    
+    send_approval_email(user.email, user.username, approved=False)
+    
     db.session.delete(user)
     db.session.commit()
     return jsonify({'success': True})
@@ -148,14 +155,11 @@ def delete_user(user_id):
     user = User.query.get_or_404(user_id)
     
     try:
-        # Delete all messages from user's chats
         for chat in user.chats:
             Message.query.filter_by(chat_id=chat.id).delete()
         
-        # Delete user's chats
         Chat.query.filter_by(user_id=user_id).delete()
         
-        # Delete the user
         db.session.delete(user)
         db.session.commit()
         return jsonify({'success': True})
@@ -278,11 +282,9 @@ def stream_message(chat_id):
             ai_message.role = 'assistant'
             db.session.add(ai_message)
             
-            # Generate and update chat summary
             all_messages = Message.query.filter_by(chat_id=chat_id).order_by(Message.timestamp).all()
             chat.title = generate_chat_summary(all_messages)
             
-            # Suggest and add tags
             suggested_tags = suggest_tags(all_messages)
             existing_tags = Tag.query.filter(Tag.name.in_(suggested_tags)).all()
             chat.tags = list(set(chat.tags + existing_tags))
