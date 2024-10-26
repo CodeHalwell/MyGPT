@@ -59,6 +59,7 @@ args = "python security_migration.py"
 
 [deployment]
 run = ["sh", "-c", "python main.py"]
+deploymentTarget = "cloudrun"
 
 [[ports]]
 localPort = 80
