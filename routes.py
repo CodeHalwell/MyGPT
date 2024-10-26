@@ -271,6 +271,26 @@ def delete_tag(tag_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/admin/tag/<int:tag_id>/update', methods=['POST'])
+@login_required
+def update_tag(tag_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        tag = Tag.query.get_or_404(tag_id)
+        data = request.get_json()
+        
+        if 'color' in data:
+            tag.color = data['color']
+            
+        db.session.commit()
+        return jsonify({'message': 'Tag updated successfully'})
+    except Exception as e:
+        app.logger.error(f"Error updating tag: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/admin/user/<int:user_id>/approve', methods=['POST'])
 @login_required
 def approve_user(user_id):
