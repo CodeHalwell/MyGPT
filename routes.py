@@ -53,6 +53,48 @@ def index():
         return redirect(url_for('chat'))
     return redirect(url_for('login'))
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Handle user login."""
+    if current_user.is_authenticated:
+        return redirect(url_for('chat'))
+    
+    if request.method == 'POST':
+        username = sanitize_input(request.form.get('username', ''))
+        password = request.form.get('password', '')
+        
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            if user.is_account_locked():
+                flash('Account is temporarily locked. Please try again later.')
+                return redirect(url_for('login'))
+            
+            if not user.is_approved:
+                return redirect(url_for('pending_approval'))
+            
+            login_user(user)
+            return redirect(url_for('chat'))
+        flash('Invalid username or password')
+    return render_template('login.html')
+
+@app.route('/settings', methods=['GET'])
+@login_required
+def settings():
+    """User settings page."""
+    return render_template('settings.html')
+
+@app.route('/admin')
+@login_required
+def admin():
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.')
+        return redirect(url_for('index'))
+    
+    users = User.query.all()
+    pending_users = User.query.filter_by(is_approved=False).all()
+    tags = Tag.query.all()
+    return render_template('admin.html', users=users, pending_users=pending_users, tags=tags)
+
 @app.route('/chat')
 @login_required
 def chat():
@@ -116,3 +158,16 @@ def reset_password(token):
         return redirect(url_for('login'))
     
     return render_template('reset_password.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    """Handle user logout."""
+    logout_user()
+    flash('You have been logged out successfully.')
+    return redirect(url_for('login'))
+
+@app.route('/pending_approval')
+def pending_approval():
+    """Show pending approval page."""
+    return render_template('pending_approval.html')
