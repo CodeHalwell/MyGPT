@@ -127,7 +127,7 @@
                             </thead>
                             <tbody id="tagsList">
                                 {% for tag in tags %}
-                                <tr>
+                                <tr data-tag-id="{{ tag.id }}" data-color="{{ tag.color }}">
                                     <td>
                                         <span class="badge" style="background-color: {{ tag.color }}">
                                             {{ tag.name }}
@@ -135,9 +135,14 @@
                                     </td>
                                     <td>{{ tag.color }}</td>
                                     <td>
-                                        <button class="btn btn-danger btn-sm" onclick="deleteTag({{ tag.id }})">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
+                                        <div class="d-flex align-items-center">
+                                            <button class="btn btn-primary btn-sm me-2" onclick="editTag({{ tag.id }})">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-danger btn-sm" onclick="deleteTag({{ tag.id }})">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -315,6 +320,41 @@ async function deleteTag(tagId) {
         console.error('Error deleting tag:', error);
         alert('Error deleting tag: ' + error.message);
     }
+}
+
+async function editTag(tagId) {
+    const tag = document.querySelector(`tr[data-tag-id="${tagId}"]`);
+    const colorPicker = document.createElement('input');
+    colorPicker.type = 'color';
+    colorPicker.value = tag.dataset.color;
+    colorPicker.style.display = 'none';
+    document.body.appendChild(colorPicker);
+    
+    colorPicker.addEventListener('change', async (e) => {
+        const newColor = e.target.value;
+        try {
+            const response = await fetch(`/admin/tag/${tagId}/update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ color: newColor })
+            });
+            
+            if (response.ok) {
+                location.reload();
+            } else {
+                const data = await response.json();
+                alert(data.error || 'Failed to update tag color');
+            }
+        } catch (error) {
+            console.error('Error updating tag color:', error);
+            alert('Error updating tag color: ' + error.message);
+        }
+        document.body.removeChild(colorPicker);
+    });
+    
+    colorPicker.click();
 }
 </script>
 {% endblock %}
