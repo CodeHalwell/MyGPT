@@ -1,6 +1,6 @@
 /* Container adjustments */
 .container {
-    max-width: 98%;  /* Increased container width */
+    max-width: 98%;
     padding-left: 0.5rem;
     padding-right: 0.5rem;
 }
@@ -46,6 +46,18 @@
     background-color: rgb(8, 7, 7, 0.1);
     color: var(--bs-light);
     border-bottom-left-radius: 0.25rem;
+}
+
+/* Model info styles */
+.model-info {
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.message.assistant .model-info {
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Code block styles */

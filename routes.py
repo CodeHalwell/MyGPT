@@ -3,16 +3,14 @@ from flask import render_template, redirect, url_for, request, flash, jsonify, R
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db
 from models import User, Chat, Message, Tag
-from chat_handler import get_ai_response_stream, generate_chat_summary, suggest_tags
+from chat_handler import get_ai_response_stream, generate_chat_summary, suggest_tags, MODEL_MAPPING
 from email_handler import send_registration_email, send_approval_email, send_admin_notification_email
 
 def generate_random_color():
-    # Generate random HSL color for better readability
     hue = random.randint(0, 360)
-    saturation = random.randint(50, 90)  # Avoid too gray (low saturation) colors
-    lightness = random.randint(35, 65)   # Avoid too light/dark colors
+    saturation = random.randint(50, 90)
+    lightness = random.randint(35, 65)
     
-    # Convert HSL to hex
     def hsl_to_hex(h, s, l):
         h = h / 360
         s = s / 100
@@ -99,14 +97,12 @@ def register():
         db.session.commit()
         
         if not user.is_admin:
-            # Send registration confirmation to user
             email_sent = send_registration_email(user.email, user.username)
             if not email_sent:
                 flash('Registration successful but email notification could not be sent.')
             else:
                 flash('Your registration is pending approval from an administrator. You will receive an email when your account is approved.')
             
-            # Send notification to admin
             admin_notified = send_admin_notification_email(user.email, user.username)
             if not admin_notified:
                 app.logger.error(f"Failed to send admin notification for new user registration: {user.username}")
@@ -176,6 +172,19 @@ def save_message(chat_id):
         db.session.rollback()
         return jsonify({'error': 'Failed to save message'}), 500
 
+@app.route('/chat/<int:chat_id>/messages')
+@login_required
+def get_chat_messages(chat_id):
+    chat = Chat.query.get_or_404(chat_id)
+    if chat.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    messages = [{
+        'content': m.content,
+        'role': m.role,
+        'model': m.model if m.role == 'assistant' else None
+    } for m in chat.messages]
+    return jsonify(messages)
+
 @app.route('/chat/<int:chat_id>/message/stream')
 @login_required
 def stream_ai_response(chat_id):
@@ -191,19 +200,17 @@ def stream_ai_response(chat_id):
             for token in get_ai_response_stream(messages, model=model):
                 yield f"data: {token}\n\n"
                 
-            # Save the complete AI response
             complete_response = "".join(get_ai_response_stream(messages, model=model))
             message = Message()
             message.chat_id = chat_id
             message.content = complete_response
             message.role = 'assistant'
+            message.model = MODEL_MAPPING.get(model, model)
             db.session.add(message)
             
-            # Update chat title after first exchange if it's still default
             if chat.title == "New Chat" and len(chat.messages) <= 2:
                 chat.title = generate_chat_summary(messages + [{'role': 'assistant', 'content': complete_response}])
             
-            # Generate and add tags
             if len(chat.messages) <= 2:
                 new_tags = suggest_tags(messages + [{'role': 'assistant', 'content': complete_response}])
                 for tag_name in new_tags:
@@ -211,7 +218,7 @@ def stream_ai_response(chat_id):
                     if not tag:
                         tag = Tag()
                         tag.name = tag_name
-                        tag.color = generate_random_color()  # Add random color
+                        tag.color = generate_random_color()
                         db.session.add(tag)
                     if tag not in chat.tags:
                         chat.tags.append(tag)
@@ -233,15 +240,6 @@ def get_chat_title(chat_id):
     if chat.user_id != current_user.id:
         return jsonify({'error': 'Unauthorized'}), 403
     return jsonify({'title': chat.title})
-
-@app.route('/chat/<int:chat_id>/messages')
-@login_required
-def get_chat_messages(chat_id):
-    chat = Chat.query.get_or_404(chat_id)
-    if chat.user_id != current_user.id:
-        return jsonify({'error': 'Unauthorized'}), 403
-    messages = [{'content': m.content, 'role': m.role} for m in chat.messages]
-    return jsonify(messages)
 
 @app.route('/chat/<int:chat_id>/delete', methods=['POST'])
 @login_required
@@ -302,14 +300,10 @@ def delete_tag(tag_id):
     
     try:
         tag = Tag.query.get_or_404(tag_id)
-        
-        # Remove tag from all chats
         for chat in tag.chats:
             chat.tags.remove(tag)
-            
         db.session.delete(tag)
         db.session.commit()
-        
         return jsonify({'message': 'Tag deleted successfully'})
     except Exception as e:
         app.logger.error(f"Error deleting tag: {str(e)}")
@@ -325,10 +319,8 @@ def update_tag(tag_id):
     try:
         tag = Tag.query.get_or_404(tag_id)
         data = request.get_json()
-        
         if 'color' in data:
             tag.color = data['color']
-            
         db.session.commit()
         return jsonify({'message': 'Tag updated successfully'})
     except Exception as e:
@@ -352,7 +344,6 @@ def approve_user(user_id):
         user.is_approved = True
         db.session.commit()
         
-        # Send approval email
         email_sent = send_approval_email(user.email, user.username, approved=True)
         if not email_sent:
             app.logger.error(f"Failed to send approval email to user: {user.username}")

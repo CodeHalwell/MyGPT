@@ -101,7 +101,7 @@ async function loadChat(chatId) {
         const messages = await response.json();
         console.log('Loaded messages:', messages);
         messages.forEach(message => {
-            appendMessage(message.content, message.role);
+            appendMessage(message.content, message.role, message.model);
         });
 
         // Apply syntax highlighting to code blocks
@@ -202,11 +202,16 @@ async function sendMessage(e) {
             if (!responseDiv) {
                 responseDiv = document.createElement('div');
                 responseDiv.className = 'message assistant';
+                // Add model information at the top of assistant message
+                const modelInfo = document.createElement('div');
+                modelInfo.className = 'model-info';
+                modelInfo.textContent = `Model: ${model}`;
+                responseDiv.appendChild(modelInfo);
                 document.getElementById('chatMessages').appendChild(responseDiv);
             }
 
             assistantResponse += event.data;
-            responseDiv.innerHTML = formatCodeBlocks(assistantResponse);
+            responseDiv.innerHTML = `<div class="model-info">Model: ${model}</div>` + formatCodeBlocks(assistantResponse);
             
             // Immediately highlight any code blocks
             responseDiv.querySelectorAll('pre code').forEach((block) => {
@@ -316,14 +321,22 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function appendMessage(content, role) {
-    console.log('Appending message:', { role, contentLength: content.length });
+function appendMessage(content, role, model = null) {
+    console.log('Appending message:', { role, model, contentLength: content.length });
     const chatMessages = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${role}`;
     
+    let innerHTML = '';
+    
+    // Add model information for assistant messages
+    if (role === 'assistant' && model) {
+        innerHTML += `<div class="model-info">Model: ${model}</div>`;
+    }
+    
     // Format content and handle code blocks
-    messageDiv.innerHTML = formatCodeBlocks(content);
+    innerHTML += formatCodeBlocks(content);
+    messageDiv.innerHTML = innerHTML;
     
     chatMessages.appendChild(messageDiv);
     messageDiv.scrollIntoView({ behavior: 'smooth' });
