@@ -6,7 +6,6 @@ from sqlalchemy.orm import DeclarativeBase
 import logging
 from werkzeug.middleware.proxy_fix import ProxyFix
 from whitenoise import WhiteNoise
-from flask_talisman import Talisman
 
 logger = logging.getLogger(__name__)
 
@@ -32,24 +31,8 @@ def create_app():
         max_age=31536000
     )
     
-    # Configure ProxyFix for proper header handling behind Replit's proxy
-    app.wsgi_app = ProxyFix(
-        app.wsgi_app,
-        x_for=1,      # Number of proxy servers
-        x_proto=1,    # SSL termination happens at proxy
-        x_host=1,     # Original host header
-        x_port=1,     # Original port
-        x_prefix=1    # Handle proxy path rewrites
-    )
-    
-    # Security settings
-    app.config['SESSION_COOKIE_SECURE'] = True
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
-    app.config['REMEMBER_COOKIE_SECURE'] = True
-    app.config['REMEMBER_COOKIE_HTTPONLY'] = True
-    app.config['REMEMBER_COOKIE_DURATION'] = 3600  # 1 hour
+    # Add ProxyFix middleware
+    app.wsgi_app = ProxyFix(app.wsgi_app)
     
     app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "a secret key"
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
@@ -69,25 +52,6 @@ def create_app():
         login_manager.init_app(app)
         login_manager.login_view = 'login'
         logger.info("Database and login manager initialized successfully")
-        
-        # Initialize Talisman with security headers for Replit environment
-        Talisman(
-            app,
-            force_https=True,
-            strict_transport_security=True,
-            session_cookie_secure=True,
-            content_security_policy={
-                'default-src': "'self'",
-                'img-src': "'self' data:",
-                'script-src': "'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com cdn.replit.com",
-                'style-src': "'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com cdn.replit.com",
-                'font-src': "'self' cdn.jsdelivr.net cdnjs.cloudflare.com",
-                'connect-src': "'self' *"  # Updated to allow SSE connections
-            },
-            content_security_policy_nonce_in=['script-src'],
-            force_file_save=True
-        )
-        
     except Exception as e:
         logger.error(f"Error initializing extensions: {str(e)}")
         raise
