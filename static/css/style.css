@@ -1,4 +1,10 @@
 /* Chat container styles */
+.container {
+    max-width: 98%;  /* Increase from default Bootstrap container width */
+    padding-left: 0.5rem;  /* Reduce left padding */
+    padding-right: 0.5rem; /* Reduce right padding */
+}
+
 .chat-container {
     height: 85vh;  /* Increased height for better visibility */
     display: flex;
@@ -13,6 +19,8 @@
     background: var(--bs-dark);
     border-radius: 0.5rem;
     margin-bottom: 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bs-primary) var(--bs-dark);
 }
 
 /* Message styles */
@@ -47,6 +55,7 @@
     padding: 1.2rem;
     margin: 1rem 0;  /* Consistent margin */
     border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-x: auto;  /* Enable horizontal scrolling for long code */
 }
 
 .message pre code {
@@ -91,11 +100,22 @@
 .chat-input form {
     display: flex;
     gap: 0.75rem;  /* Increased gap */
+    align-items: center;  /* Center items vertically */
 }
 
 .chat-input input {
     flex-grow: 1;
     padding: 0.75rem 1rem;  /* Larger input field */
+    border-radius: 0.375rem;
+    border: 1px solid var(--bs-secondary);
+    background: var(--bs-dark);
+    color: var(--bs-light);
+}
+
+.chat-input input:focus {
+    outline: none;
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
 }
 
 /* Error message styles */
@@ -128,12 +148,16 @@
     white-space: nowrap;
     padding: 0.75rem 1rem;  /* More padding */
     border-radius: 0.375rem;
+    background: var(--bs-dark);
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
 }
 
 .chat-item.active {
     background-color: var(--bs-primary);
     border-color: var(--bs-primary);
     font-weight: 500;  /* Slightly bolder */
+    color: var(--bs-light);
 }
 
 .delete-chat-btn {
@@ -144,6 +168,9 @@
     transition: all 0.2s;
     font-size: 1.1rem;
     border-radius: 0.375rem;
+    border: none;
+    background: transparent;
+    color: var(--bs-danger);
 }
 
 .delete-chat-btn i {
@@ -172,6 +199,11 @@
     padding: 0.4rem 0.8rem;
     font-size: 0.85rem;
     border-radius: 1rem;
+    transition: all 0.2s ease;
+}
+
+.chat-tags .badge:hover {
+    filter: brightness(1.1);
 }
 
 /* Responsive adjustments */
@@ -190,5 +222,15 @@
     
     .chat-input button {
         width: 100%;
+        margin-top: 0.5rem;
+    }
+
+    .chat-messages {
+        padding: 1rem;
+    }
+
+    .container {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
     }
 }
