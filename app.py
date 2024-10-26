@@ -26,4 +26,6 @@ login_manager.login_view = 'login'
 
 with app.app_context():
     import models
+    # Drop all tables and recreate them
+    db.drop_all()
     db.create_all()
