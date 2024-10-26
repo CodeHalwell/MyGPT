@@ -76,4 +76,67 @@ def register():
             
     return render_template('register.html')
 
-# ... [rest of the code remains unchanged]
+@app.route('/pending-approval')
+def pending_approval():
+    return render_template('pending_approval.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    try:
+        logout_user()
+        flash('You have been logged out.')
+        return redirect(url_for('login'))
+    except Exception as e:
+        app.logger.error(f"Error during logout: {str(e)}")
+        flash('An error occurred during logout.')
+        return redirect(url_for('index'))
+
+@app.route('/chat')
+@login_required
+def chat():
+    chats = Chat.query.filter_by(user_id=current_user.id).order_by(Chat.created_at.desc()).all()
+    return render_template('chat.html', chats=chats)
+
+@app.route('/chat/<int:chat_id>/messages')
+@login_required
+def get_chat_messages(chat_id):
+    chat = Chat.query.get_or_404(chat_id)
+    if chat.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    messages = [{'content': m.content, 'role': m.role} for m in chat.messages]
+    return jsonify(messages)
+
+@app.route('/admin')
+@login_required
+def admin():
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.')
+        return redirect(url_for('index'))
+    
+    users = User.query.all()
+    serialized_users = [{
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'is_admin': user.is_admin,
+        'is_approved': user.is_approved,
+        'chats_count': len(user.chats)
+    } for user in users]
+    
+    pending_users = User.query.filter_by(is_approved=False, is_admin=False).all()
+    serialized_pending_users = [{
+        'id': user.id,
+        'username': user.username,
+        'email': user.email
+    } for user in pending_users]
+    
+    tags = Tag.query.all()
+    return render_template('admin.html', 
+                         users=users,
+                         tags=tags, 
+                         pending_users=pending_users,
+                         serialized_users=serialized_users,
+                         serialized_pending_users=serialized_pending_users)
+
+# Rest of your existing admin routes...
