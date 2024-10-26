@@ -205,4 +205,36 @@ def reject_user(user_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/admin/user/<int:user_id>/delete', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        user = User.query.get_or_404(user_id)
+        
+        # Don't allow deleting current admin
+        if user.id == current_user.id:
+            return jsonify({'error': 'Cannot delete your own account'}), 400
+            
+        # Don't allow deleting other admins
+        if user.is_admin:
+            return jsonify({'error': 'Cannot delete admin users'}), 400
+        
+        # Delete all user's chats and messages
+        for chat in user.chats:
+            Message.query.filter_by(chat_id=chat.id).delete()
+            db.session.delete(chat)
+        
+        # Delete the user
+        db.session.delete(user)
+        db.session.commit()
+        
+        return jsonify({'message': 'User deleted successfully'})
+    except Exception as e:
+        app.logger.error(f"Error deleting user: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 # Rest of your existing admin routes...
