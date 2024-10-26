@@ -17,7 +17,7 @@ args = "Python Migration"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Gunicorn Server"
+args = "Flask Server"
 
 [[workflows.workflow]]
 name = "Python Migration"
@@ -31,7 +31,7 @@ task = "shell.exec"
 args = "python db_migrate.py"
 
 [[workflows.workflow]]
-name = "Gunicorn Server"
+name = "Flask Server"
 author = "agent"
 
 [workflows.workflow.metadata]
@@ -39,7 +39,7 @@ agentRequireRestartOnSave = false
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "gunicorn -c gunicorn_config.py main:app"
+args = "python main.py"
 waitForPort = 5000
 
 [deployment]
