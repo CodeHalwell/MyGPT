@@ -6,33 +6,30 @@
 }
 
 /* Sidebar styles */
-.col-md-3 {
-    height: 100%;
-    overflow-y: auto;
-    padding: 1rem;
+.col-md-6, .col-lg-4 {
     background: var(--bs-dark);
+    padding: 1.25rem;
     border-radius: 0.5rem;
+    min-width: 300px;  /* Ensure minimum width */
 }
 
 /* Chat list styles */
 .chat-list {
     max-height: calc(100vh - 160px);
     overflow-y: auto;
+    padding-right: 0.5rem;  /* Add padding for scrollbar */
 }
 
 /* Make chat items wider and improve spacing */
 .chat-list-item {
-    margin-bottom: 0.75rem;
-    width: 100%;  /* Ensure full width */
+    margin-bottom: 1rem;
+    width: 100%;
 }
 
 .chat-item {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    padding: 0.75rem 1rem;
-    width: 100%;  /* Make the chat item take full width */
-    display: block; /* Ensure block display */
+    padding: 1rem 1.5rem;
+    width: 100%;
+    font-size: 1.1rem;  /* Slightly larger font */
 }
 
 .chat-item.active {
@@ -78,6 +75,9 @@
     display: flex;
     flex-direction: column;
     position: relative;
+    background-color: var(--bs-dark);
+    border-radius: 0.5rem;
+    overflow-y: auto;
 }
 
 /* Update chat messages area */
@@ -200,21 +200,23 @@
 /* Chat tags styling */
 .chat-tags {
     margin-top: 0.5rem;
+    padding: 0 0.5rem;
 }
 
 .chat-tags .badge {
     margin-right: 0.25rem;
     margin-bottom: 0.25rem;
     padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
 }
 
 /* Update responsive styles */
 @media (max-width: 768px) {
     .container-fluid {
-        min-height: 600px;
+        min-height: 700px;
     }
     
-    .col-md-3 {
+    .col-md-6, .col-lg-4 {
         height: auto;
         margin-bottom: 1rem;
     }
