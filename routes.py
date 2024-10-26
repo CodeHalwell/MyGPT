@@ -43,10 +43,12 @@ def register():
         user.username = request.form['username']
         user.email = request.form['email']
         user.set_password(request.form['password'])
+        
         # Make the first user an admin and automatically approve them
         if User.query.count() == 0:
             user.is_admin = True
             user.is_approved = True
+            
         db.session.add(user)
         db.session.commit()
         
@@ -165,8 +167,7 @@ def delete_tag(tag_id):
 @login_required
 def chat():
     chats = Chat.query.filter_by(user_id=current_user.id).order_by(Chat.created_at.desc()).all()
-    tags = Tag.query.all()
-    return render_template('chat.html', chats=chats, tags=tags)
+    return render_template('chat.html', chats=chats)
 
 @app.route('/chat/new', methods=['POST'])
 @login_required

@@ -10,8 +10,7 @@
     </div>
     
     <!-- Pending Approvals Section -->
-    {% if pending_users %}
-    <div class="card mb-4">
+    <div class="card mb-4" id="pendingApprovalsSection" style="display: {% if pending_users %}block{% else %}none{% endif %};">
         <div class="card-header bg-warning text-dark">
             <h3 class="h5 mb-0">Pending User Approvals</h3>
         </div>
@@ -25,7 +24,7 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="pendingUsersTableBody">
                         {% for user in pending_users %}
                         <tr>
                             <td>{{ user.username }}</td>
@@ -45,7 +44,6 @@
             </div>
         </div>
     </div>
-    {% endif %}
     
     <!-- Users Section -->
     <h3 class="mb-3">Users</h3>
@@ -153,6 +151,10 @@
 </div>
 
 <script>
+// Debug logging for pending users
+console.log('Pending users:', {{ pending_users|tojson|safe }});
+console.log('Pending approvals section visibility:', document.getElementById('pendingApprovalsSection').style.display);
+
 async function approveUser(userId) {
     if (!confirm('Are you sure you want to approve this user?')) {
         return;
@@ -167,12 +169,15 @@ async function approveUser(userId) {
         });
         
         if (response.ok) {
+            console.log('User approved successfully:', userId);
             location.reload();
         } else {
             const data = await response.json();
+            console.error('Failed to approve user:', data.error);
             alert(data.error || 'Failed to approve user');
         }
     } catch (error) {
+        console.error('Error approving user:', error);
         alert('Error approving user: ' + error.message);
     }
 }
@@ -191,12 +196,15 @@ async function rejectUser(userId) {
         });
         
         if (response.ok) {
+            console.log('User rejected successfully:', userId);
             location.reload();
         } else {
             const data = await response.json();
+            console.error('Failed to reject user:', data.error);
             alert(data.error || 'Failed to reject user');
         }
     } catch (error) {
+        console.error('Error rejecting user:', error);
         alert('Error rejecting user: ' + error.message);
     }
 }
@@ -215,12 +223,15 @@ async function deleteUser(userId) {
         });
         
         if (response.ok) {
+            console.log('User deleted successfully:', userId);
             location.reload();
         } else {
             const data = await response.json();
+            console.error('Failed to delete user:', data.error);
             alert(data.error || 'Failed to delete user');
         }
     } catch (error) {
+        console.error('Error deleting user:', error);
         alert('Error deleting user: ' + error.message);
     }
 }
@@ -237,10 +248,14 @@ async function toggleAdminStatus(userId, isAdmin) {
         
         if (!response.ok) {
             const data = await response.json();
+            console.error('Failed to update admin status:', data.error);
             alert(data.error || 'Failed to update admin status');
             location.reload();
+        } else {
+            console.log('Admin status updated successfully:', userId, isAdmin);
         }
     } catch (error) {
+        console.error('Error updating admin status:', error);
         alert('Error updating admin status: ' + error.message);
         location.reload();
     }
@@ -261,12 +276,15 @@ document.getElementById('newTagForm').addEventListener('submit', async (e) => {
         });
         
         if (response.ok) {
+            console.log('Tag created successfully:', name);
             location.reload();
         } else {
             const data = await response.json();
+            console.error('Failed to create tag:', data.error);
             alert(data.error || 'Failed to create tag');
         }
     } catch (error) {
+        console.error('Error creating tag:', error);
         alert('Error creating tag: ' + error.message);
     }
 });
@@ -285,12 +303,15 @@ async function deleteTag(tagId) {
         });
         
         if (response.ok) {
+            console.log('Tag deleted successfully:', tagId);
             location.reload();
         } else {
             const data = await response.json();
+            console.error('Failed to delete tag:', data.error);
             alert(data.error || 'Failed to delete tag');
         }
     } catch (error) {
+        console.error('Error deleting tag:', error);
         alert('Error deleting tag: ' + error.message);
     }
 }
