@@ -6,6 +6,7 @@ from flask import url_for
 SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
 FROM_EMAIL = os.environ.get('VERIFIED_SENDER_EMAIL')
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'danielhalwell@gmail.com')
+DOMAIN = 'https://mygptapp.replit.app'
 
 def send_registration_email(user_email, username):
     """Send a registration confirmation email to the user."""
@@ -78,14 +79,12 @@ def send_approval_email(user_email, username, approved=True):
         return False
         
     try:
-        domain = f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER')}.repl.co"
-        
         if approved:
             subject = 'Account Approved - AI Chat Assistant'
             content = f'''
                 <h2>Welcome aboard, {username}!</h2>
                 <p>Your account has been approved. You can now log in and start using the AI Chat Assistant.</p>
-                <p>Click <a href="{domain}/login">here</a> to login.</p>
+                <p>Click <a href="{DOMAIN}/login">here</a> to login.</p>
             '''
         else:
             subject = 'Account Registration Update - AI Chat Assistant'
@@ -120,8 +119,7 @@ def send_password_reset_email(user_email, username, reset_token):
         return False
         
     try:
-        domain = f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER')}.repl.co"
-        reset_link = f"{domain}/reset_password/{reset_token}"
+        reset_link = f"{DOMAIN}/reset_password/{reset_token}"
         
         message = Mail(
             from_email=FROM_EMAIL,
