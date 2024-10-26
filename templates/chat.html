@@ -6,9 +6,11 @@
     <div class="col-md-3 border-end">
         <div class="d-grid mb-3">
             <select id="modelSelect" class="form-select me-2">
-                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                <option value="gpt-4o">GPT-4o</option>
+                <option value="gpt-4o-mini">GPT-4o-mini</option>
                 <option value="gpt-4">GPT-4</option>
                 <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
             </select>
         </div>        
         <div class="d-grid mb-3">
@@ -65,3 +67,4 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 {% endblock %}
+

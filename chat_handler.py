@@ -6,7 +6,19 @@ from openai.types.chat import ChatCompletionMessage, ChatCompletionMessageParam,
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
-def get_ai_response_stream(messages: List[Dict[str, str]], model: str = "gpt-3.5-turbo") -> Iterator[str]:
+# Model mapping for custom model names
+MODEL_MAPPING = {
+    "gpt-4o": "gpt-4",
+    "gpt-4o-mini": "gpt-3.5-turbo",
+    "gpt-4": "gpt-4",
+    "gpt-4-turbo": "gpt-4-1106-preview",
+    "gpt-3.5-turbo": "gpt-3.5-turbo"
+}
+
+def get_ai_response_stream(messages: List[Dict[str, str]], model: str = "gpt-4o") -> Iterator[str]:
+    # Map the model name to the actual OpenAI model
+    actual_model = MODEL_MAPPING.get(model, "gpt-4")
+    
     formatted_messages: List[ChatCompletionMessageParam] = [
         {"role": m["role"], "content": m["content"]}
         for m in messages
@@ -34,7 +46,7 @@ Never put code on the same line as the backticks or language specification.'''
     formatted_messages.insert(0, system_message)
     
     response = openai_client.chat.completions.create(
-        model=model,
+        model=actual_model,
         messages=formatted_messages,
         stream=True
     )
@@ -75,14 +87,17 @@ Never put code on the same line as the backticks or language specification.'''
                 # Keep the rest in the buffer
                 buffer = buffer[end + 3:]
 
-def get_ai_response(messages: List[Dict[str, str]], model: str = "gpt-3.5-turbo") -> str:
+def get_ai_response(messages: List[Dict[str, str]], model: str = "gpt-4o") -> str:
+    # Map the model name to the actual OpenAI model
+    actual_model = MODEL_MAPPING.get(model, "gpt-4")
+    
     formatted_messages: List[ChatCompletionMessageParam] = [
         {"role": m["role"], "content": m["content"]}
         for m in messages
     ]
     
     response = openai_client.chat.completions.create(
-        model=model,
+        model=actual_model,
         messages=formatted_messages
     )
     
@@ -103,7 +118,7 @@ def generate_chat_summary(messages: List[Dict[str, str]]) -> str:
     }
     
     response = openai_client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         messages=[summary_prompt] + formatted_messages
     )
     
@@ -131,9 +146,11 @@ Example response: python, algorithms, data-structures"""
     }
     
     response = openai_client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         messages=[tag_prompt] + formatted_messages
     )
     
-    tags = response.choices[0].message.content.split(',')
-    return {tag.strip().lower() for tag in tags if tag.strip()}
+    if response.choices[0].message.content:
+        tags = response.choices[0].message.content.split(',')
+        return {tag.strip().lower() for tag in tags if tag.strip()}
+    return set()
