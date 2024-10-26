@@ -17,6 +17,8 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
 }
+app.config['ADMIN_USERNAME'] = 'admin'  # Add hardcoded admin credentials
+app.config['ADMIN_EMAIL'] = 'admin@example.com'
 
 db.init_app(app)
 login_manager.init_app(app)
