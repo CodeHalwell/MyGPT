@@ -134,7 +134,10 @@ async function sendMessage(e) {
     console.log('Sending message');
     
     const messageInput = document.getElementById('messageInput');
+    const modelSelect = document.getElementById('modelSelect');
     const message = messageInput.value.trim();
+    const model = modelSelect.value;
+    
     if (!message) return;
 
     // If no chat is selected, create a new one first
@@ -170,7 +173,7 @@ async function sendMessage(e) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ message })
+            body: JSON.stringify({ message, model })
         });
 
         if (!saveResponse.ok) {
@@ -183,7 +186,7 @@ async function sendMessage(e) {
         }
 
         // Set up SSE connection for streaming response
-        currentEventSource = new EventSource(`/chat/${currentChatId}/message/stream`);
+        currentEventSource = new EventSource(`/chat/${currentChatId}/message/stream?model=${model}`);
         let assistantResponse = '';
         let responseDiv = null;
 

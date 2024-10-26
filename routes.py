@@ -83,14 +83,9 @@ def pending_approval():
 @app.route('/logout')
 @login_required
 def logout():
-    try:
-        logout_user()
-        flash('You have been logged out.')
-        return redirect(url_for('login'))
-    except Exception as e:
-        app.logger.error(f"Error during logout: {str(e)}")
-        flash('An error occurred during logout.')
-        return redirect(url_for('index'))
+    logout_user()
+    flash('You have been logged out.')
+    return redirect(url_for('login'))
 
 @app.route('/chat')
 @login_required
@@ -102,7 +97,6 @@ def chat():
 @login_required
 def create_chat():
     try:
-        # Create a new chat for the current user
         chat = Chat(user_id=current_user.id, title="New Chat")
         db.session.add(chat)
         db.session.commit()
@@ -145,15 +139,16 @@ def stream_ai_response(chat_id):
     if chat.user_id != current_user.id:
         return jsonify({'error': 'Unauthorized'}), 403
         
+    model = request.args.get('model', 'gpt-3.5-turbo')
     messages = [{'role': m.role, 'content': m.content} for m in chat.messages]
     
     def generate():
         try:
-            for token in get_ai_response_stream(messages):
+            for token in get_ai_response_stream(messages, model=model):
                 yield f"data: {token}\n\n"
                 
             # Save the complete AI response
-            complete_response = "".join(get_ai_response_stream(messages))
+            complete_response = "".join(get_ai_response_stream(messages, model=model))
             message = Message(
                 chat_id=chat_id,
                 content=complete_response,
@@ -208,18 +203,11 @@ def get_chat_messages(chat_id):
 def delete_chat(chat_id):
     try:
         chat = Chat.query.get_or_404(chat_id)
-        
-        # Check if the chat belongs to the current user
         if chat.user_id != current_user.id:
             return jsonify({'error': 'Unauthorized'}), 403
-            
-        # Delete all messages in the chat
+        
         Message.query.filter_by(chat_id=chat.id).delete()
-        
-        # Delete chat tags associations
         chat.tags = []
-        
-        # Delete the chat
         db.session.delete(chat)
         db.session.commit()
         
@@ -269,12 +257,8 @@ def approve_user(user_id):
     
     try:
         user = User.query.get_or_404(user_id)
-        
-        # Don't allow approving already approved users
         if user.is_approved:
             return jsonify({'error': 'User is already approved'}), 400
-        
-        # Don't allow approving admin users (they should be auto-approved)
         if user.is_admin:
             return jsonify({'error': 'Admin users are auto-approved'}), 400
         
@@ -300,25 +284,19 @@ def reject_user(user_id):
     
     try:
         user = User.query.get_or_404(user_id)
-        
-        # Don't allow rejecting other admins
         if user.is_admin:
             return jsonify({'error': 'Cannot reject admin users'}), 400
         
-        # Store user info before deletion for email
         user_email = user.email
         username = user.username
         
-        # Delete all user's chats and messages
         for chat in user.chats:
             Message.query.filter_by(chat_id=chat.id).delete()
             db.session.delete(chat)
         
-        # Delete the user
         db.session.delete(user)
         db.session.commit()
         
-        # Send rejection email
         send_approval_email(user_email, username, approved=False)
         
         return jsonify({'message': 'User rejected successfully'})
@@ -335,21 +313,15 @@ def delete_user(user_id):
     
     try:
         user = User.query.get_or_404(user_id)
-        
-        # Don't allow deleting current admin
         if user.id == current_user.id:
             return jsonify({'error': 'Cannot delete your own account'}), 400
-            
-        # Don't allow deleting other admins
         if user.is_admin:
             return jsonify({'error': 'Cannot delete admin users'}), 400
         
-        # Delete all user's chats and messages
         for chat in user.chats:
             Message.query.filter_by(chat_id=chat.id).delete()
             db.session.delete(chat)
         
-        # Delete the user
         db.session.delete(user)
         db.session.commit()
         
