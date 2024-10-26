@@ -52,11 +52,13 @@ def register():
         db.session.add(user)
         db.session.commit()
         
+        # Only redirect to index if user is approved (first user)
         if user.is_approved:
             login_user(user)
             return redirect(url_for('index'))
-        else:
-            return render_template('pending_approval.html')
+            
+        # All other users go to pending approval page
+        return render_template('pending_approval.html')
             
     return render_template('register.html')
 
