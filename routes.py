@@ -249,6 +249,28 @@ def admin():
                          serialized_users=serialized_users,
                          serialized_pending_users=serialized_pending_users)
 
+@app.route('/admin/tag/<int:tag_id>', methods=['DELETE'])
+@login_required
+def delete_tag(tag_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        tag = Tag.query.get_or_404(tag_id)
+        
+        # Remove tag from all chats
+        for chat in tag.chats:
+            chat.tags.remove(tag)
+            
+        db.session.delete(tag)
+        db.session.commit()
+        
+        return jsonify({'message': 'Tag deleted successfully'})
+    except Exception as e:
+        app.logger.error(f"Error deleting tag: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/admin/user/<int:user_id>/approve', methods=['POST'])
 @login_required
 def approve_user(user_id):
