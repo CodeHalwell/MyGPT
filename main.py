@@ -4,6 +4,7 @@ import logging
 from flask import g, request
 from app import db
 import traceback
+import os
 
 # Configure logging
 logging.basicConfig(
@@ -42,8 +43,15 @@ def internal_error(error):
 # For production server
 if __name__ == "__main__":
     try:
-        logger.info("Starting Flask production server...")
-        app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
+        port = int(os.environ.get("PORT", 5000))
+        logger.info(f"Starting Flask production server on port {port}...")
+        app.run(
+            host="0.0.0.0",
+            port=port,
+            debug=False,
+            use_reloader=False,  # Disable reloader in production
+            threaded=True
+        )
     except Exception as e:
         logger.error(f"Server error: {str(e)}")
         raise

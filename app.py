@@ -25,18 +25,18 @@ def create_app():
     
     # Configure static files
     app.static_folder = 'static'
-    app.static_url_path = ''
+    app.static_url_path = '/static'
     
-    # Add WhiteNoise for serving static files
+    # Configure WhiteNoise for production static file serving
     app.wsgi_app = WhiteNoise(
         app.wsgi_app,
         root=app.static_folder,
-        prefix='',
+        prefix=app.static_url_path,
         autorefresh=False,  # Disable autorefresh in production
         max_age=31536000  # Cache for 1 year
     )
     
-    # Add ProxyFix middleware for proper header handling
+    # Add ProxyFix middleware for proper header handling behind Replit's proxy
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
     
     # Production configurations
