@@ -53,6 +53,13 @@ def index():
         return redirect(url_for('chat'))
     return redirect(url_for('login'))
 
+@app.route('/chat')
+@login_required
+def chat():
+    """Main chat interface route."""
+    chats = Chat.query.filter_by(user_id=current_user.id).order_by(Chat.created_at.desc()).all()
+    return render_template('chat.html', chats=chats)
+
 @app.route('/forgot_password', methods=['GET', 'POST'])
 @limiter.limit("3 per hour")
 def forgot_password():
@@ -109,5 +116,3 @@ def reset_password(token):
         return redirect(url_for('login'))
     
     return render_template('reset_password.html')
-
-# [Rest of the existing routes remain unchanged...]
