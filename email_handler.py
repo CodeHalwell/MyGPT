@@ -5,6 +5,7 @@ from flask import url_for
 
 SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
 FROM_EMAIL = os.environ.get('VERIFIED_SENDER_EMAIL')
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'danielhalwell@gmail.com')
 
 def send_registration_email(user_email, username):
     """Send a registration confirmation email to the user."""
@@ -34,6 +35,40 @@ def send_registration_email(user_email, username):
         return True
     except Exception as e:
         print(f"Error sending registration email: {str(e)}")
+        return False
+
+def send_admin_notification_email(new_user_email, new_username):
+    """Send a notification email to admin about new user registration."""
+    if not SENDGRID_API_KEY or not FROM_EMAIL or not ADMIN_EMAIL:
+        print("SendGrid configuration or admin email missing")
+        return False
+        
+    try:
+        message = Mail(
+            from_email=FROM_EMAIL,
+            to_emails=ADMIN_EMAIL,
+            subject='New User Registration - AI Chat Assistant',
+            html_content=f'''
+                <h2>New User Registration</h2>
+                <p>A new user has registered and is awaiting approval:</p>
+                <ul>
+                    <li><strong>Username:</strong> {new_username}</li>
+                    <li><strong>Email:</strong> {new_user_email}</li>
+                </ul>
+                <p>Please log in to the admin panel to approve or reject this registration.</p>
+            '''
+        )
+        
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        response = sg.send(message)
+        if response.status_code >= 400:
+            print(f"SendGrid API error: {response.status_code} - {response.body}")
+            return False
+            
+        print(f"Admin notification email sent successfully. Status code: {response.status_code}")
+        return True
+    except Exception as e:
+        print(f"Error sending admin notification email: {str(e)}")
         return False
 
 def send_approval_email(user_email, username, approved=True):
