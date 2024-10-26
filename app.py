@@ -7,6 +7,11 @@ import logging
 from werkzeug.middleware.proxy_fix import ProxyFix
 from whitenoise import WhiteNoise
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 class Base(DeclarativeBase):
@@ -27,14 +32,15 @@ def create_app():
         app.wsgi_app,
         root=app.static_folder,
         prefix='',
-        autorefresh=True,
-        max_age=31536000
+        autorefresh=False,  # Disable autorefresh in production
+        max_age=31536000  # Cache for 1 year
     )
     
-    # Add ProxyFix middleware
-    app.wsgi_app = ProxyFix(app.wsgi_app)
+    # Add ProxyFix middleware for proper header handling
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
     
-    app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "a secret key"
+    # Production configurations
+    app.secret_key = os.environ.get("FLASK_SECRET_KEY") or os.urandom(24)
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
         "pool_recycle": 300,
@@ -45,6 +51,14 @@ def create_app():
     }
     app.config['ADMIN_USERNAME'] = os.environ.get('ADMIN_USERNAME', 'codhe')
     app.config['ADMIN_EMAIL'] = os.environ.get('ADMIN_EMAIL', 'danielhalwell@gmail.com')
+    
+    # Production security settings
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
+    app.config['REMEMBER_COOKIE_DURATION'] = 2592000  # 30 days
+    app.config['REMEMBER_COOKIE_SECURE'] = True
+    app.config['REMEMBER_COOKIE_HTTPONLY'] = True
 
     # Initialize extensions
     try:
@@ -59,7 +73,6 @@ def create_app():
     with app.app_context():
         try:
             import models
-            # Only create tables if they don't exist
             db.create_all()
             logger.info("Database tables created successfully")
         except Exception as e:
