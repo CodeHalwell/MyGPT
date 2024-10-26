@@ -19,10 +19,6 @@ args = "Python Migration"
 task = "workflow.run"
 args = "Flask Server"
 
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Security Migration"
-
 [[workflows.workflow]]
 name = "Python Migration"
 author = "agent"
@@ -46,24 +42,8 @@ task = "shell.exec"
 args = "python main.py"
 waitForPort = 5000
 
-[[workflows.workflow]]
-name = "Security Migration"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python security_migration.py"
-
 [deployment]
 run = ["sh", "-c", "python main.py"]
-deploymentTarget = "cloudrun"
-
-[[ports]]
-localPort = 80
-externalPort = 3000
 
 [[ports]]
 localPort = 5000
