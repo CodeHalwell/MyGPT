@@ -99,7 +99,6 @@ def forgot_password():
             else:
                 flash('Error sending password reset email. Please try again later.')
         else:
-            # Always show the same message to prevent email enumeration
             flash('If an account exists with this email, you will receive password reset instructions.')
         
         return redirect(url_for('login'))
@@ -240,7 +239,6 @@ def stream_response(chat_id):
             response_content.append(content)
             yield f"data: {content}\n\n"
         
-        # Save the complete message
         complete_response = ''.join(response_content)
         message = Message(chat_id=chat_id,
                          content=complete_response,
@@ -248,12 +246,9 @@ def stream_response(chat_id):
                          model=model)
         db.session.add(message)
         
-        # Update chat title and tags if this is the first message
-        if len(messages) <= 1:  # Only user's first message
-            # Generate and set chat title
+        if len(messages) <= 1:
             chat.title = generate_chat_summary(messages + [{'role': 'assistant', 'content': complete_response}])
             
-            # Generate and set tags
             suggested_tags = suggest_tags(messages + [{'role': 'assistant', 'content': complete_response}])
             for tag_name in suggested_tags:
                 tag = Tag.query.filter_by(name=tag_name).first()
@@ -299,7 +294,6 @@ def admin():
     pending_users = [user for user in users if not user.is_approved]
     tags = Tag.query.all()
     
-    # Prepare serialized data for JavaScript
     serialized_users = [{
         'id': user.id,
         'username': user.username,
@@ -348,7 +342,6 @@ def approve_user(user_id):
     user.is_approved = True
     db.session.commit()
     
-    # Send approval email
     if send_approval_email(user.email, user.username, approved=True):
         return jsonify({'status': 'success'})
     else:
@@ -362,15 +355,12 @@ def reject_user(user_id):
     
     user = User.query.get_or_404(user_id)
     
-    # Send rejection email before deleting the user
     email_sent = send_approval_email(user.email, user.username, approved=False)
     
-    # Delete user's chats and messages
     for chat in user.chats:
         Message.query.filter_by(chat_id=chat.id).delete()
     Chat.query.filter_by(user_id=user.id).delete()
     
-    # Delete the user
     db.session.delete(user)
     db.session.commit()
     
@@ -390,12 +380,10 @@ def delete_user(user_id):
     
     user = User.query.get_or_404(user_id)
     
-    # Delete user's chats and messages
     for chat in user.chats:
         Message.query.filter_by(chat_id=chat.id).delete()
     Chat.query.filter_by(user_id=user.id).delete()
     
-    # Delete the user
     db.session.delete(user)
     db.session.commit()
     
@@ -449,3 +437,55 @@ def update_tag(tag_id):
         db.session.commit()
     
     return jsonify({'status': 'success'})
+
+@app.route('/settings')
+@login_required
+def settings():
+    return render_template('settings.html')
+
+@app.route('/settings/update-username', methods=['POST'])
+@login_required
+def update_username():
+    new_username = request.form.get('new_username')
+    current_password = request.form.get('current_password')
+    
+    if not current_user.check_password(current_password):
+        flash('Current password is incorrect')
+        return redirect(url_for('settings'))
+    
+    if new_username == current_user.username:
+        flash('New username must be different from current username')
+        return redirect(url_for('settings'))
+    
+    if User.query.filter_by(username=new_username).first():
+        flash('Username already exists')
+        return redirect(url_for('settings'))
+    
+    current_user.username = new_username
+    db.session.commit()
+    flash('Username updated successfully')
+    return redirect(url_for('settings'))
+
+@app.route('/settings/update-password', methods=['POST'])
+@login_required
+def update_password():
+    current_password = request.form.get('current_password')
+    new_password = request.form.get('new_password')
+    confirm_password = request.form.get('confirm_password')
+    
+    if not current_user.check_password(current_password):
+        flash('Current password is incorrect')
+        return redirect(url_for('settings'))
+    
+    if new_password != confirm_password:
+        flash('New passwords do not match')
+        return redirect(url_for('settings'))
+    
+    if current_password == new_password:
+        flash('New password must be different from current password')
+        return redirect(url_for('settings'))
+    
+    current_user.set_password(new_password)
+    db.session.commit()
+    flash('Password updated successfully')
+    return redirect(url_for('settings'))
