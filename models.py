@@ -43,6 +43,7 @@ class Message(db.Model):
     chat_id = db.Column(db.Integer, db.ForeignKey('chat.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
     role = db.Column(db.String(20), nullable=False)  # 'user' or 'assistant'
+    model = db.Column(db.String(50))  # New field to store the model used
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 @login_manager.user_loader
