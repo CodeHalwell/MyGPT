@@ -6,7 +6,7 @@ from openai.types.chat import ChatCompletionMessage, ChatCompletionMessageParam,
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
-def get_ai_response_stream(messages: List[Dict[str, str]]) -> Iterator[str]:
+def get_ai_response_stream(messages: List[Dict[str, str]], model: str = "gpt-3.5-turbo") -> Iterator[str]:
     formatted_messages: List[ChatCompletionMessageParam] = [
         {"role": m["role"], "content": m["content"]}
         for m in messages
@@ -14,7 +14,9 @@ def get_ai_response_stream(messages: List[Dict[str, str]]) -> Iterator[str]:
     
     system_message: ChatCompletionSystemMessageParam = {
         "role": "system",
-        "content": '''You are a helpful assistant that writes clean, well-formatted code. When providing code examples:
+        "content": '''You are a helpful assistant that answers generally queries to the user. You will help with with whatever you need to help with. You will answer in a way that is friendly and helpful. Should you be asked to write code;
+        
+        write clean, well-formatted code. When providing code examples:
 1. Always start with triple backticks and the language name on its own line
 2. Put the code on the next line after the language specification
 3. Put the closing triple backticks on a new line
@@ -32,7 +34,7 @@ Never put code on the same line as the backticks or language specification.'''
     formatted_messages.insert(0, system_message)
     
     response = openai_client.chat.completions.create(
-        model="gpt-4",
+        model=model,
         messages=formatted_messages,
         stream=True
     )
@@ -73,14 +75,14 @@ Never put code on the same line as the backticks or language specification.'''
                 # Keep the rest in the buffer
                 buffer = buffer[end + 3:]
 
-def get_ai_response(messages: List[Dict[str, str]]) -> str:
+def get_ai_response(messages: List[Dict[str, str]], model: str = "gpt-3.5-turbo") -> str:
     formatted_messages: List[ChatCompletionMessageParam] = [
         {"role": m["role"], "content": m["content"]}
         for m in messages
     ]
     
     response = openai_client.chat.completions.create(
-        model="gpt-4",
+        model=model,
         messages=formatted_messages
     )
     
@@ -101,7 +103,7 @@ def generate_chat_summary(messages: List[Dict[str, str]]) -> str:
     }
     
     response = openai_client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-3.5-turbo",
         messages=[summary_prompt] + formatted_messages
     )
     
@@ -129,7 +131,7 @@ Example response: python, algorithms, data-structures"""
     }
     
     response = openai_client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-3.5-turbo",
         messages=[tag_prompt] + formatted_messages
     )
     
