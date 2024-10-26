@@ -79,10 +79,33 @@ def admin():
     if not current_user.is_admin:
         flash('Access denied. Admin privileges required.')
         return redirect(url_for('index'))
+    
+    # Serialize users data
     users = User.query.all()
-    tags = Tag.query.all()
+    serialized_users = [{
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'is_admin': user.is_admin,
+        'is_approved': user.is_approved,
+        'chats_count': len(user.chats)
+    } for user in users]
+    
+    # Serialize pending users data
     pending_users = User.query.filter_by(is_approved=False, is_admin=False).all()
-    return render_template('admin.html', users=users, tags=tags, pending_users=pending_users)
+    serialized_pending_users = [{
+        'id': user.id,
+        'username': user.username,
+        'email': user.email
+    } for user in pending_users]
+    
+    tags = Tag.query.all()
+    return render_template('admin.html', 
+                         users=users,  # Keep original for template iteration
+                         tags=tags, 
+                         pending_users=pending_users,  # Keep original for template iteration
+                         serialized_users=serialized_users,
+                         serialized_pending_users=serialized_pending_users)
 
 @app.route('/admin/user/<int:user_id>/approve', methods=['POST'])
 @login_required
