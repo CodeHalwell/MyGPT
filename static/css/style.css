@@ -1,96 +1,23 @@
-/* Base layout styles */
-body {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-.navbar {
-    padding: 1rem;
-    margin-bottom: 0;
-}
-
-.content-wrapper {
-    padding: 1rem;
-    height: calc(100vh - 72px);
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Chat layout styles */
-.container-fluid {
-    height: 100%;
-    padding: 0 !important;
-}
-
-.chat-layout {
-    display: grid;
-    grid-template-columns: minmax(300px, 400px) 1fr;
-    gap: 1rem;
-    height: 100%;
-    max-width: 2000px;
-    margin: 0 auto;
-}
-
-.chat-sidebar {
-    background: var(--bs-dark);
-    border-radius: 0.5rem;
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow: hidden;
-}
-
-.chat-list {
-    flex: 1;
-    overflow-y: auto;
-    margin-right: -0.5rem;
-    padding-right: 0.5rem;
-}
-
-.chat-list-item {
-    margin-bottom: 1rem;
-}
-
-.chat-item {
-    padding: 1rem 1.5rem;
-    width: 100%;
-    font-size: 1.1rem;
-}
-
-.chat-item.active {
-    background-color: var(--bs-primary);
-    border-color: var(--bs-primary);
-}
-
-.chat-main {
-    background: var(--bs-dark);
-    border-radius: 0.5rem;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
+/* Chat container styles */
 .chat-container {
-    height: 100%;
+    height: 70vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
 }
 
 .chat-messages {
-    flex: 1;
+    flex-grow: 1;
     overflow-y: auto;
     padding: 1rem;
+    background: var(--bs-dark);
+    border-radius: 0.5rem;
 }
 
 /* Message styles */
 .message {
-    max-width: 85%;
-    margin-bottom: 1.5rem;
-    padding: 1.25rem;
+    max-width: 80%;
+    margin-bottom: 1rem;
+    padding: 1rem;
     border-radius: 1rem;
     white-space: pre-wrap;
     word-break: break-word;
@@ -115,9 +42,8 @@ body {
     background: var(--bs-dark);
     border-radius: 0.5rem;
     padding: 1.2rem;
-    margin: 1rem 0;
+    margin: 0.8rem 0;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    overflow-x: auto;
 }
 
 .message pre code {
@@ -126,7 +52,6 @@ body {
     tab-size: 4;
     font-family: 'Source Code Pro', monospace;
     line-height: 1.5;
-    font-size: 0.95rem;
 }
 
 /* Inline code styles */
@@ -150,68 +75,67 @@ body {
     display: flex;
 }
 
-.chat-footer {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 1rem;
-    background: inherit;
-    border-radius: 0 0 0.5rem 0.5rem;
+/* Chat input area */
+.chat-input {
+    margin-top: 1rem;
+    position: relative;
 }
 
-/* Chat input styles */
 .chat-input form {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
 }
 
 .chat-input input {
-    flex: 1;
+    flex-grow: 1;
 }
 
 /* Error message styles */
 .error-message {
-    display: none;
     color: var(--bs-danger);
-    padding: 0.75rem;
-    margin: 0.75rem;
-    border-radius: 0.5rem;
-    background: rgba(var(--bs-danger-rgb), 0.1);
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    display: none;
 }
 
 .error-message.visible {
     display: block;
 }
 
-/* Chat tags styling */
-.chat-tags {
-    margin-top: 0.5rem;
-    padding: 0 0.5rem;
+/* Chat list styles */
+.chat-list-item {
+    margin-bottom: 0.5rem;
 }
 
-.chat-tags .badge {
-    margin-right: 0.25rem;
-    margin-bottom: 0.25rem;
-    padding: 0.4rem 0.6rem;
-    font-size: 0.85rem;
+.chat-item {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-/* Responsive styles */
-@media (max-width: 768px) {
-    .chat-layout {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
-        height: auto;
-        gap: 0.5rem;
-    }
-    
-    .chat-sidebar {
-        max-height: 300px;
-    }
-    
-    .chat-main {
-        height: calc(100vh - 400px);
-    }
-    
-    .message {
-        max-width: 95%;
-    }
+.chat-item.active {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.delete-chat-btn {
+    height: 100%;
+    padding: 0.5rem 1rem;  /* Increased padding */
+    align-self: stretch;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    font-size: 1.1rem;     /* Increased font size */
+}
+
+/* Update the trash icon size */
+.delete-chat-btn i {
+    font-size: 1.2rem;     /* Make the icon bigger */
+}
+
+.delete-chat-btn:hover {
+    opacity: 1;
+}
+
+.chat-list-item:hover .delete-chat-btn {
+    opacity: 1;
 }

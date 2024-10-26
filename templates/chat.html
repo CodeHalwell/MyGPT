@@ -1,65 +1,58 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-fluid p-0">
-    <div class="chat-layout">
-        <!-- Chat History Sidebar -->
-        <aside class="chat-sidebar">
-            <div class="d-grid mb-3">
-                <button id="newChatBtn" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-2"></i>New Chat
-                </button>
-            </div>
-            <div class="chat-list">
-                {% for chat in chats %}
-                <div class="chat-list-item">
-                    <div class="d-flex align-items-center">
-                        <a href="#" class="list-group-item list-group-item-action chat-item flex-grow-1" data-chat-id="{{ chat.id }}">
-                            <i class="bi bi-chat-text me-2"></i>{{ chat.title or 'New Chat' }}
-                        </a>
-                        <button class="btn btn-sm btn-outline-danger delete-chat-btn" data-chat-id="{{ chat.id }}" title="Delete chat">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                    <div class="chat-tags">
-                        {% for tag in chat.tags %}
-                        <span class="badge" style="background-color: {{ tag.color }}">{{ tag.name }}</span>
-                        {% endfor %}
-                    </div>
+<div class="row h-100">
+    <!-- Sidebar -->
+    <div class="col-md-3 border-end">
+        <div class="d-grid mb-3">
+            <button id="newChatBtn" class="btn btn-primary">New Chat</button>
+        </div>
+        <div class="list-group">
+            {% for chat in chats %}
+            <div class="d-flex flex-column chat-list-item">
+                <div class="d-flex align-items-center">
+                    <a href="#" class="list-group-item list-group-item-action chat-item flex-grow-1" data-chat-id="{{ chat.id }}">
+                        {{ chat.title or 'New Chat' }}
+                    </a>
+                    <button class="btn btn-sm btn-outline-danger delete-chat-btn ms-2" data-chat-id="{{ chat.id }}">
+                        <i class="bi bi-trash"></i>
+                    </button>
                 </div>
-                {% endfor %}
+                <div class="chat-tags ms-3 mt-1">
+                    {% for tag in chat.tags %}
+                    <span class="badge" style="background-color: {{ tag.color }}">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
             </div>
-        </aside>
+            {% endfor %}
+        </div>
+    </div>
 
-        <!-- Main Chat Area -->
-        <main class="chat-main">
-            <div class="chat-container">
-                <div id="chatMessages" class="chat-messages"></div>
-                <div id="loadingSpinner" class="loading-spinner">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
-                <div id="errorMessage" class="error-message">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    <span>An error occurred. Please try again.</span>
-                </div>
-                <footer class="chat-footer">
-                    <div class="chat-input">
-                        <form id="messageForm" class="d-flex">
-                            <input type="text" id="messageInput" class="form-control" placeholder="Type your message..." required>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-send me-2"></i>Send
-                            </button>
-                        </form>
-                    </div>
-                </footer>
+    <!-- Chat Area -->
+    <div class="col-md-9">
+        <div class="chat-container">
+            <div id="chatMessages" class="chat-messages">
+                <!-- Messages will be displayed here -->
             </div>
-        </main>
+            <div id="loadingSpinner" class="loading-spinner">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="errorMessage" class="error-message">
+                An error occurred. Please try again.
+            </div>
+            <div class="chat-input">
+                <form id="messageForm" class="d-flex">
+                    <input type="text" id="messageInput" class="form-control" placeholder="Type your message..." required>
+                    <button type="submit" class="btn btn-primary">Send</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Add custom CSS and JavaScript -->
+<!-- Add custom CSS -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 {% endblock %}
