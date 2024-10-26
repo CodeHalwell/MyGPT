@@ -60,6 +60,34 @@ def admin():
     tags = Tag.query.all()
     return render_template('admin.html', users=users, tags=tags)
 
+@app.route('/admin/user/<int:user_id>/delete', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    # Prevent self-deletion
+    if user_id == current_user.id:
+        return jsonify({'error': 'Cannot delete your own account'}), 400
+        
+    user = User.query.get_or_404(user_id)
+    
+    try:
+        # Delete all messages from user's chats
+        for chat in user.chats:
+            Message.query.filter_by(chat_id=chat.id).delete()
+        
+        # Delete all chats
+        Chat.query.filter_by(user_id=user_id).delete()
+        
+        # Finally delete the user
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Failed to delete user: {str(e)}'}), 500
+
 @app.route('/admin/tag/new', methods=['POST'])
 @login_required
 def create_tag():
