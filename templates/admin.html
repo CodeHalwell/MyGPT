@@ -152,7 +152,8 @@
 
 <script>
 // Debug logging for pending users
-console.log('Pending users:', {{ pending_users|tojson|safe }});
+console.log('Pending users:', {{ serialized_pending_users|tojson|safe }});
+console.log('Serialized users:', {{ serialized_users|tojson|safe }});
 console.log('Pending approvals section visibility:', document.getElementById('pendingApprovalsSection').style.display);
 
 async function approveUser(userId) {
