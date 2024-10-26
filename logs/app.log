@@ -1,0 +1,6 @@
+2024-10-26 22:17:07,297 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:17:07,330 INFO: Database and login manager initialized successfully [in /home/runner/MyGPTApp/app.py:79]
+2024-10-26 22:17:08,097 INFO: Database tables created successfully [in /home/runner/MyGPTApp/app.py:89]
+2024-10-26 22:17:09,017 INFO: Application startup [in /home/runner/MyGPTApp/app.py:33]
+2024-10-26 22:17:09,054 INFO: Database and login manager initialized successfully [in /home/runner/MyGPTApp/app.py:79]
+2024-10-26 22:17:09,809 INFO: Database tables created successfully [in /home/runner/MyGPTApp/app.py:89]
