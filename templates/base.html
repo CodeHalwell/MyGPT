@@ -15,32 +15,32 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/html.min.js"></script>
 </head>
-    <body>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            <div class="container">
-                <a class="navbar-brand" href="{{ url_for('index') }}">AI Chat Assistant</a>
-                {% if current_user.is_authenticated %}
-                <div class="navbar-nav ms-auto">
-                    {% if current_user.is_admin %}
-                    <a class="nav-item nav-link" href="{{ url_for('admin') }}">Admin</a>
-                    {% endif %}
-                    <span class="nav-item nav-link">Welcome, {{ current_user.username }}</span>
-                    <a class="nav-item nav-link" href="{{ url_for('logout') }}">Logout</a>
-                </div>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">AI Chat Assistant</a>
+            {% if current_user.is_authenticated %}
+            <div class="navbar-nav ms-auto">
+                {% if current_user.is_admin %}
+                <a class="nav-item nav-link" href="{{ url_for('admin') }}">Admin</a>
                 {% endif %}
+                <span class="nav-item nav-link">Welcome, {{ current_user.username }}</span>
+                <a class="nav-item nav-link" href="{{ url_for('logout') }}">Logout</a>
             </div>
-        </nav>
-
-        <div class="container mt-4">
-            {% with messages = get_flashed_messages() %}
-            {% if messages %}
-            {% for message in messages %}
-            <div class="alert alert-info">{{ message }}</div>
-            {% endfor %}
             {% endif %}
-            {% endwith %}
-
-            {% block content %}{% endblock %}
         </div>
-    </body>
+    </nav>
+
+    <div class="content-wrapper">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-info">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+</body>
 </html>

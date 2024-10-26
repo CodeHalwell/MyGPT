@@ -1,6 +1,27 @@
-.container-fluid {
+/* Base layout styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar {
+    padding: 1rem;
+    margin-bottom: 0;
+}
+
+.content-wrapper {
+    padding: 1rem;
     height: calc(100vh - 72px);
-    padding: 1rem !important;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Chat layout styles */
+.container-fluid {
+    height: 100%;
+    padding: 0 !important;
 }
 
 .chat-layout {
@@ -179,6 +200,7 @@
         grid-template-columns: 1fr;
         grid-template-rows: auto 1fr;
         height: auto;
+        gap: 0.5rem;
     }
     
     .chat-sidebar {
@@ -187,5 +209,9 @@
     
     .chat-main {
         height: calc(100vh - 400px);
+    }
+    
+    .message {
+        max-width: 95%;
     }
 }
