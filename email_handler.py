@@ -111,3 +111,33 @@ def send_approval_email(user_email, username, approved=True):
     except Exception as e:
         print(f"Error sending approval email: {str(e)}")
         return False
+
+def send_password_reset_email(user_email, username, reset_token):
+    if not SENDGRID_API_KEY or not FROM_EMAIL:
+        print("SendGrid configuration missing")
+        return False
+        
+    try:
+        message = Mail(
+            from_email=FROM_EMAIL,
+            to_emails=user_email,
+            subject='Password Reset Request - AI Chat Assistant',
+            html_content=f'''
+                <h2>Password Reset Request</h2>
+                <p>Hello {username},</p>
+                <p>We received a request to reset your password. Click the link below to set a new password:</p>
+                <p><a href="https://{os.environ.get('REPL_SLUG', '')}.{os.environ.get('REPL_OWNER', '')}.repl.co/reset_password/{reset_token}">Reset Password</a></p>
+                <p>If you didn't request this, please ignore this email.</p>
+                <p>This link will expire in 1 hour.</p>
+            '''
+        )
+        
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        response = sg.send(message)
+        if response.status_code >= 400:
+            print(f"SendGrid API error: {response.status_code} - {response.body}")
+            return False
+        return True
+    except Exception as e:
+        print(f"Error sending password reset email: {str(e)}")
+        return False
