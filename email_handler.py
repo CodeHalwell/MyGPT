@@ -8,6 +8,10 @@ FROM_EMAIL = os.environ.get('VERIFIED_SENDER_EMAIL')
 
 def send_registration_email(user_email, username):
     """Send a registration confirmation email to the user."""
+    if not SENDGRID_API_KEY or not FROM_EMAIL:
+        print("SendGrid configuration missing")
+        return False
+        
     try:
         message = Mail(
             from_email=FROM_EMAIL,
@@ -22,6 +26,10 @@ def send_registration_email(user_email, username):
         
         sg = SendGridAPIClient(SENDGRID_API_KEY)
         response = sg.send(message)
+        if response.status_code >= 400:
+            print(f"SendGrid API error: {response.status_code} - {response.body}")
+            return False
+            
         print(f"Registration email sent successfully. Status code: {response.status_code}")
         return True
     except Exception as e:
@@ -30,6 +38,10 @@ def send_registration_email(user_email, username):
 
 def send_approval_email(user_email, username, approved=True):
     """Send an email notifying the user about their approval status."""
+    if not SENDGRID_API_KEY or not FROM_EMAIL:
+        print("SendGrid configuration missing")
+        return False
+        
     try:
         if approved:
             subject = 'Account Approved - AI Chat Assistant'
@@ -55,6 +67,10 @@ def send_approval_email(user_email, username, approved=True):
         
         sg = SendGridAPIClient(SENDGRID_API_KEY)
         response = sg.send(message)
+        if response.status_code >= 400:
+            print(f"SendGrid API error: {response.status_code} - {response.body}")
+            return False
+            
         print(f"Approval email sent successfully. Status code: {response.status_code}")
         return True
     except Exception as e:
