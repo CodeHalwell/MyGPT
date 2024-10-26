@@ -72,6 +72,13 @@ def login():
         flash('Invalid username or password')
     return render_template('login.html')
 
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out successfully.')
+    return redirect(url_for('login'))
+
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
     if current_user.is_authenticated:
@@ -170,4 +177,275 @@ def register():
             
     return render_template('register.html')
 
-[Rest of the existing routes.py content remains the same...]
+@app.route('/chat')
+@login_required
+def chat():
+    chats = Chat.query.filter_by(user_id=current_user.id).order_by(Chat.created_at.desc()).all()
+    return render_template('chat.html', chats=chats)
+
+@app.route('/chat/new', methods=['POST'])
+@login_required
+def new_chat():
+    chat = Chat(user_id=current_user.id)
+    db.session.add(chat)
+    db.session.commit()
+    return jsonify({'chat_id': chat.id})
+
+@app.route('/chat/<int:chat_id>/messages')
+@login_required
+def get_messages(chat_id):
+    chat = Chat.query.get_or_404(chat_id)
+    if chat.user_id != current_user.id and not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    messages = [{
+        'content': msg.content,
+        'role': msg.role,
+        'model': msg.model
+    } for msg in chat.messages]
+    return jsonify(messages)
+
+@app.route('/chat/<int:chat_id>/message', methods=['POST'])
+@login_required
+def save_message(chat_id):
+    chat = Chat.query.get_or_404(chat_id)
+    if chat.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    data = request.get_json()
+    message = Message(chat_id=chat_id,
+                     content=data['message'],
+                     role='user')
+    db.session.add(message)
+    db.session.commit()
+    
+    return jsonify({'status': 'success'})
+
+@app.route('/chat/<int:chat_id>/message/stream')
+@login_required
+def stream_response(chat_id):
+    chat = Chat.query.get_or_404(chat_id)
+    if chat.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    messages = [{
+        'role': msg.role,
+        'content': msg.content
+    } for msg in chat.messages]
+    
+    model = request.args.get('model', 'gpt-4o')
+    
+    def generate():
+        response_content = []
+        for content in get_ai_response_stream(messages, model):
+            response_content.append(content)
+            yield f"data: {content}\n\n"
+        
+        # Save the complete message
+        complete_response = ''.join(response_content)
+        message = Message(chat_id=chat_id,
+                         content=complete_response,
+                         role='assistant',
+                         model=model)
+        db.session.add(message)
+        
+        # Update chat title and tags if this is the first message
+        if len(messages) <= 1:  # Only user's first message
+            # Generate and set chat title
+            chat.title = generate_chat_summary(messages + [{'role': 'assistant', 'content': complete_response}])
+            
+            # Generate and set tags
+            suggested_tags = suggest_tags(messages + [{'role': 'assistant', 'content': complete_response}])
+            for tag_name in suggested_tags:
+                tag = Tag.query.filter_by(name=tag_name).first()
+                if not tag:
+                    tag = Tag(name=tag_name, color=generate_random_color())
+                    db.session.add(tag)
+                chat.tags.append(tag)
+        
+        db.session.commit()
+        yield "data: [DONE]\n\n"
+    
+    return Response(stream_with_context(generate()), mimetype='text/event-stream')
+
+@app.route('/chat/<int:chat_id>/title')
+@login_required
+def get_chat_title(chat_id):
+    chat = Chat.query.get_or_404(chat_id)
+    if chat.user_id != current_user.id and not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    return jsonify({'title': chat.title or 'New Chat'})
+
+@app.route('/chat/<int:chat_id>/delete', methods=['POST'])
+@login_required
+def delete_chat(chat_id):
+    chat = Chat.query.get_or_404(chat_id)
+    if chat.user_id != current_user.id and not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    Message.query.filter_by(chat_id=chat_id).delete()
+    db.session.delete(chat)
+    db.session.commit()
+    
+    return jsonify({'status': 'success'})
+
+@app.route('/admin')
+@login_required
+def admin():
+    if not current_user.is_admin:
+        flash('Unauthorized access.')
+        return redirect(url_for('index'))
+    
+    users = User.query.all()
+    pending_users = [user for user in users if not user.is_approved]
+    tags = Tag.query.all()
+    
+    # Prepare serialized data for JavaScript
+    serialized_users = [{
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'is_admin': user.is_admin,
+        'is_approved': user.is_approved,
+        'chats_count': len(user.chats)
+    } for user in users]
+    
+    serialized_pending_users = [{
+        'id': user.id,
+        'username': user.username,
+        'email': user.email
+    } for user in pending_users]
+    
+    return render_template('admin.html',
+                         users=users,
+                         pending_users=pending_users,
+                         tags=tags,
+                         serialized_users=serialized_users,
+                         serialized_pending_users=serialized_pending_users)
+
+@app.route('/admin/user/<int:user_id>/toggle-admin', methods=['POST'])
+@login_required
+def toggle_admin(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized access'}), 403
+    
+    if user_id == current_user.id:
+        return jsonify({'error': 'Cannot modify your own admin status'}), 400
+    
+    user = User.query.get_or_404(user_id)
+    data = request.get_json()
+    user.is_admin = data.get('is_admin', False)
+    db.session.commit()
+    
+    return jsonify({'status': 'success'})
+
+@app.route('/admin/user/<int:user_id>/approve', methods=['POST'])
+@login_required
+def approve_user(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized access'}), 403
+    
+    user = User.query.get_or_404(user_id)
+    user.is_approved = True
+    db.session.commit()
+    
+    # Send approval email
+    if send_approval_email(user.email, user.username, approved=True):
+        return jsonify({'status': 'success'})
+    else:
+        return jsonify({'error': 'Failed to send approval email'}), 500
+
+@app.route('/admin/user/<int:user_id>/reject', methods=['POST'])
+@login_required
+def reject_user(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized access'}), 403
+    
+    user = User.query.get_or_404(user_id)
+    
+    # Send rejection email before deleting the user
+    email_sent = send_approval_email(user.email, user.username, approved=False)
+    
+    # Delete user's chats and messages
+    for chat in user.chats:
+        Message.query.filter_by(chat_id=chat.id).delete()
+    Chat.query.filter_by(user_id=user.id).delete()
+    
+    # Delete the user
+    db.session.delete(user)
+    db.session.commit()
+    
+    if email_sent:
+        return jsonify({'status': 'success'})
+    else:
+        return jsonify({'warning': 'User deleted but failed to send rejection email'})
+
+@app.route('/admin/user/<int:user_id>/delete', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized access'}), 403
+    
+    if user_id == current_user.id:
+        return jsonify({'error': 'Cannot delete your own account'}), 400
+    
+    user = User.query.get_or_404(user_id)
+    
+    # Delete user's chats and messages
+    for chat in user.chats:
+        Message.query.filter_by(chat_id=chat.id).delete()
+    Chat.query.filter_by(user_id=user.id).delete()
+    
+    # Delete the user
+    db.session.delete(user)
+    db.session.commit()
+    
+    return jsonify({'status': 'success'})
+
+@app.route('/admin/tag/new', methods=['POST'])
+@login_required
+def create_tag():
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized access'}), 403
+    
+    data = request.get_json()
+    name = data.get('name', '').strip().lower()
+    color = data.get('color', generate_random_color())
+    
+    if not name:
+        return jsonify({'error': 'Tag name is required'}), 400
+    
+    if Tag.query.filter_by(name=name).first():
+        return jsonify({'error': 'Tag already exists'}), 400
+    
+    tag = Tag(name=name, color=color)
+    db.session.add(tag)
+    db.session.commit()
+    
+    return jsonify({'status': 'success', 'tag': {'id': tag.id, 'name': tag.name, 'color': tag.color}})
+
+@app.route('/admin/tag/<int:tag_id>', methods=['DELETE'])
+@login_required
+def delete_tag(tag_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized access'}), 403
+    
+    tag = Tag.query.get_or_404(tag_id)
+    db.session.delete(tag)
+    db.session.commit()
+    
+    return jsonify({'status': 'success'})
+
+@app.route('/admin/tag/<int:tag_id>/update', methods=['POST'])
+@login_required
+def update_tag(tag_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized access'}), 403
+    
+    tag = Tag.query.get_or_404(tag_id)
+    data = request.get_json()
+    
+    if 'color' in data:
+        tag.color = data['color']
+        db.session.commit()
+    
+    return jsonify({'status': 'success'})
