@@ -203,6 +203,32 @@ def get_chat_messages(chat_id):
     messages = [{'content': m.content, 'role': m.role} for m in chat.messages]
     return jsonify(messages)
 
+@app.route('/chat/<int:chat_id>/delete', methods=['POST'])
+@login_required
+def delete_chat(chat_id):
+    try:
+        chat = Chat.query.get_or_404(chat_id)
+        
+        # Check if the chat belongs to the current user
+        if chat.user_id != current_user.id:
+            return jsonify({'error': 'Unauthorized'}), 403
+            
+        # Delete all messages in the chat
+        Message.query.filter_by(chat_id=chat.id).delete()
+        
+        # Delete chat tags associations
+        chat.tags = []
+        
+        # Delete the chat
+        db.session.delete(chat)
+        db.session.commit()
+        
+        return jsonify({'message': 'Chat deleted successfully'})
+    except Exception as e:
+        app.logger.error(f"Error deleting chat: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': 'Failed to delete chat'}), 500
+
 @app.route('/admin')
 @login_required
 def admin():
