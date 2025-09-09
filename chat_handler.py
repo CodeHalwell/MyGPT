@@ -4,7 +4,14 @@ from typing import Iterator, List, Dict, Set
 from openai.types.chat import ChatCompletionMessage, ChatCompletionMessageParam, ChatCompletionSystemMessageParam
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-openai_client = OpenAI(api_key=OPENAI_API_KEY)
+try:
+    if OPENAI_API_KEY:
+        openai_client = OpenAI(api_key=OPENAI_API_KEY)
+    else:
+        openai_client = None
+except Exception as e:
+    print(f"Error initializing OpenAI client in chat_handler: {e}")
+    openai_client = None
 
 # Model mapping for custom model names
 MODEL_MAPPING = {
@@ -18,6 +25,13 @@ MODEL_MAPPING = {
 
 def get_ai_response_stream(messages: List[Dict[str, str]],
                            model: str = "gpt-4o") -> Iterator[str]:
+    if not openai_client:
+        # Fallback response when OpenAI client is not available
+        fallback_message = "I apologize, but the AI service is currently unavailable. Please check your OpenAI API key and try again later."
+        for char in fallback_message:
+            yield char
+        return
+    
     # Map the model name to the actual OpenAI model
     actual_model = MODEL_MAPPING.get(model, "gpt-4o")
 
