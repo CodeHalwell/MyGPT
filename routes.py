@@ -54,7 +54,20 @@ def generate_random_color():
 @app.route('/')
 @login_required
 def index():
-    return redirect(url_for('chat'))
+    # Dashboard with analytics and usage metrics
+    total_chats = Chat.query.filter_by(user_id=current_user.id).count()
+    total_messages = Message.query.join(Chat).filter(Chat.user_id == current_user.id).count()
+    recent_chats = Chat.query.filter_by(user_id=current_user.id).order_by(Chat.created_at.desc()).limit(5).all()
+    
+    # Calculate usage statistics
+    chat_stats = {
+        'total_chats': total_chats,
+        'total_messages': total_messages,
+        'recent_chats': recent_chats,
+        'avg_messages_per_chat': round(total_messages / total_chats, 1) if total_chats > 0 else 0
+    }
+    
+    return render_template('dashboard.html', stats=chat_stats)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
