@@ -1,12 +1,13 @@
 {% extends "saas_base.html" %}
 
 {% block content %}
-<div class="saas-page-header">
-    <h1 class="saas-page-title">Admin Dashboard</h1>
-    <p class="saas-page-subtitle">Manage users, permissions, and system settings</p>
-</div>
+<div class="admin-content">
+    <div class="saas-page-header">
+        <h1 class="saas-page-title">Admin Dashboard</h1>
+        <p class="saas-page-subtitle">Manage users, permissions, and system settings</p>
+    </div>
 
-<div class="saas-content">
+    <div class="saas-content">
     
     <!-- Pending Approvals Section -->
     <div class="saas-card mb-4" id="pendingApprovalsSection" style="display: {% if pending_users %}block{% else %}none{% endif %};">
@@ -179,6 +180,7 @@
                 </table>
             </div>
         </div>
+    </div>
     </div>
 </div>
 

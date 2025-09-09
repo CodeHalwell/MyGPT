@@ -764,6 +764,19 @@
     padding: 0;
 }
 
+/* ===== ADMIN PAGE SPECIFIC STYLES ===== */
+.admin-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    width: 100%;
+}
+
+.admin-content .saas-content {
+    margin: 0;
+    padding: 0;
+}
+
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 768px) {
     .saas-sidebar {
