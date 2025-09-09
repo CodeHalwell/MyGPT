@@ -126,6 +126,14 @@ def get_ai_response(messages: List[Dict[str, str]],
 def generate_chat_summary(messages: List[Dict[str, str]]) -> str:
     if not messages:
         return "New Chat"
+    
+    if not openai_client:
+        # Fallback to simple summary when OpenAI client is not available
+        first_message = next((m for m in messages if m["role"] == "user"), None)
+        if first_message:
+            content = first_message["content"][:40]
+            return content + "..." if len(first_message["content"]) > 40 else content
+        return "New Chat"
 
     formatted_messages: List[ChatCompletionMessageParam] = [{
         "role":
@@ -141,16 +149,43 @@ def generate_chat_summary(messages: List[Dict[str, str]]) -> str:
         "Please provide a brief summary (max 50 characters) of the following conversation. Focus on the main topic or question being discussed."
     }
 
-    response = openai_client.chat.completions.create(
-        model="gpt-4o-mini", messages=[summary_prompt] + formatted_messages)
-
-    return response.choices[0].message.content or ""
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-3.5-turbo", messages=[summary_prompt] + formatted_messages)
+        return response.choices[0].message.content or "New Chat"
+    except Exception as e:
+        print(f"Error generating chat summary: {e}")
+        # Fallback to simple summary
+        first_message = next((m for m in messages if m["role"] == "user"), None)
+        if first_message:
+            content = first_message["content"][:40]
+            return content + "..." if len(first_message["content"]) > 40 else content
+        return "New Chat"
 
 
 def suggest_tags(messages: List[Dict[str, str]]) -> Set[str]:
     """Generate tag suggestions based on conversation content."""
     if not messages:
         return set()
+    
+    if not openai_client:
+        # Fallback to simple keyword-based tags when OpenAI client is not available
+        content = " ".join([m["content"].lower() for m in messages if m["role"] == "user"])
+        fallback_tags = set()
+        
+        # Simple keyword matching
+        if "python" in content:
+            fallback_tags.add("python")
+        if "javascript" in content or "js" in content:
+            fallback_tags.add("javascript")
+        if "code" in content or "programming" in content:
+            fallback_tags.add("coding")
+        if "data" in content:
+            fallback_tags.add("data")
+        if "web" in content or "website" in content:
+            fallback_tags.add("web")
+        
+        return fallback_tags if fallback_tags else {"general"}
 
     formatted_messages: List[ChatCompletionMessageParam] = [{
         "role":
@@ -172,11 +207,30 @@ Rules for tags:
 Example response: python, algorithms, data-structures"""
     }
 
-    response = openai_client.chat.completions.create(model="gpt-4o-mini",
-                                                     messages=[tag_prompt] +
-                                                     formatted_messages)
+    try:
+        response = openai_client.chat.completions.create(model="gpt-3.5-turbo",
+                                                         messages=[tag_prompt] +
+                                                         formatted_messages)
 
-    if response.choices[0].message.content:
-        tags = response.choices[0].message.content.split(',')
-        return {tag.strip().lower() for tag in tags if tag.strip()}
-    return set()
+        if response.choices[0].message.content:
+            tags = response.choices[0].message.content.split(',')
+            return {tag.strip().lower() for tag in tags if tag.strip()}
+        return {"general"}
+    except Exception as e:
+        print(f"Error generating tags: {e}")
+        # Fallback to simple keyword-based tags
+        content = " ".join([m["content"].lower() for m in messages if m["role"] == "user"])
+        fallback_tags = set()
+        
+        if "python" in content:
+            fallback_tags.add("python")
+        if "javascript" in content or "js" in content:
+            fallback_tags.add("javascript")
+        if "code" in content or "programming" in content:
+            fallback_tags.add("coding")
+        if "data" in content:
+            fallback_tags.add("data")
+        if "web" in content or "website" in content:
+            fallback_tags.add("web")
+        
+        return fallback_tags if fallback_tags else {"general"}
