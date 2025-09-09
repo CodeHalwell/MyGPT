@@ -192,6 +192,15 @@ async function sendMessage(e) {
 
         currentEventSource.onmessage = function(event) {
             if (event.data === '[DONE]') {
+                // Remove typing indicator and clean up
+                const typingIndicator = responseDiv?.querySelector('.typing-indicator');
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
+                if (responseDiv) {
+                    responseDiv.classList.remove('streaming');
+                }
+                
                 currentEventSource.close();
                 showLoading(false);
                 // Refresh the chat after response is complete
@@ -201,17 +210,29 @@ async function sendMessage(e) {
 
             if (!responseDiv) {
                 responseDiv = document.createElement('div');
-                responseDiv.className = 'message assistant';
+                responseDiv.className = 'message assistant streaming';
+                
+                // Create content wrapper
+                const contentWrapper = document.createElement('div');
+                contentWrapper.className = 'message-content';
+                
                 // Add model information at the top of assistant message
                 const modelInfo = document.createElement('div');
                 modelInfo.className = 'model-info';
                 modelInfo.textContent = `Model: ${model}`;
-                responseDiv.appendChild(modelInfo);
+                contentWrapper.appendChild(modelInfo);
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'streaming-content';
+                contentWrapper.appendChild(contentDiv);
+                
+                responseDiv.appendChild(contentWrapper);
                 document.getElementById('chatMessages').appendChild(responseDiv);
             }
 
             assistantResponse += event.data;
-            responseDiv.innerHTML = `<div class="model-info">Model: ${model}</div>` + formatCodeBlocks(assistantResponse);
+            const contentDiv = responseDiv.querySelector('.streaming-content');
+            contentDiv.innerHTML = formatCodeBlocks(assistantResponse) + '<span class="typing-indicator">▋</span>';
             
             // Immediately highlight any code blocks
             responseDiv.querySelectorAll('pre code').forEach((block) => {
@@ -297,7 +318,16 @@ function formatCodeBlocks(content) {
             .split('\n')
             .map(line => escapeHtml(line))
             .join('\n');
-        return `<pre><code class="language-${language}">${formattedCode}</code></pre>`;
+        const codeId = 'code-' + Math.random().toString(36).substr(2, 9);
+        return `<div class="code-block-wrapper">
+            <div class="code-header">
+                <span class="code-language">${language}</span>
+                <button class="copy-btn" onclick="copyToClipboard('${codeId}', this)" title="Copy code">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <pre><code id="${codeId}" class="language-${language}">${formattedCode}</code></pre>
+        </div>`;
     });
     
     // Handle inline code blocks (single backticks)
@@ -306,7 +336,7 @@ function formatCodeBlocks(content) {
     });
     
     // Handle regular line breaks
-    const parts = content.split(/(<pre>.*?<\/pre>)/gs);
+    const parts = content.split(/(<div class="code-block-wrapper">.*?<\/div>)/gs);
     return parts.map((part, index) => {
         // If it's a code block, leave it unchanged
         if (index % 2 === 1) return part;
@@ -319,6 +349,53 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Copy to clipboard functionality
+function copyToClipboard(codeId, button) {
+    const codeElement = document.getElementById(codeId);
+    const text = codeElement.textContent;
+    
+    navigator.clipboard.writeText(text).then(() => {
+        // Visual feedback
+        const icon = button.querySelector('i');
+        const originalClass = icon.className;
+        icon.className = 'bi bi-check';
+        button.style.background = 'rgba(52, 168, 83, 0.2)';
+        button.style.color = '#34a853';
+        
+        setTimeout(() => {
+            icon.className = originalClass;
+            button.style.background = '';
+            button.style.color = '';
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy text: ', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+    });
+}
+
+function copyToClipboard(codeId, button) {
+    const codeElement = document.getElementById(codeId);
+    if (codeElement) {
+        navigator.clipboard.writeText(codeElement.textContent).then(() => {
+            const originalIcon = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-check"></i>';
+            button.classList.add('copied');
+            setTimeout(() => {
+                button.innerHTML = originalIcon;
+                button.classList.remove('copied');
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+        });
+    }
 }
 
 function appendMessage(content, role, model = null) {
