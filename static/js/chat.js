@@ -327,6 +327,10 @@ function appendMessage(content, role, model = null) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${role}`;
     
+    // Create content wrapper
+    const contentWrapper = document.createElement('div');
+    contentWrapper.className = 'message-content';
+    
     let innerHTML = '';
     
     // Add model information for assistant messages
@@ -336,8 +340,9 @@ function appendMessage(content, role, model = null) {
     
     // Format content and handle code blocks
     innerHTML += formatCodeBlocks(content);
-    messageDiv.innerHTML = innerHTML;
+    contentWrapper.innerHTML = innerHTML;
     
+    messageDiv.appendChild(contentWrapper);
     chatMessages.appendChild(messageDiv);
     messageDiv.scrollIntoView({ behavior: 'smooth' });
     
