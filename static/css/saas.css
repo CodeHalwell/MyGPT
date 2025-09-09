@@ -1009,6 +1009,7 @@
     margin: 0 auto;
     padding: 2rem;
     width: 100%;
+    min-height: calc(100vh - 72px);
 }
 
 .admin-content .saas-page-header {
@@ -1020,6 +1021,12 @@
     margin: 0;
     padding: 0;
     max-width: none;
+}
+
+/* Fix for broken main content with sidebar */
+.saas-content.main-content {
+    margin-left: 0 !important;
+    padding: 0 !important;
 }
 
 /* ===== RESPONSIVE DESIGN ===== */

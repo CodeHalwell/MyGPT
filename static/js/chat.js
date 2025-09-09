@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const newChatBtn = document.getElementById('newChatBtn');
     const messageForm = document.getElementById('messageForm');
     const chatMessages = document.getElementById('chatMessages');
-    const chatItems = document.querySelectorAll('.chat-item');
+    const chatItems = document.querySelectorAll('.modern-chat-item');
     const deleteChatBtns = document.querySelectorAll('.delete-chat-btn');
 
     // Initialize highlight.js
@@ -113,7 +113,7 @@ async function loadChat(chatId) {
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
         // Update active state in sidebar
-        document.querySelectorAll('.chat-item').forEach(item => {
+        document.querySelectorAll('.modern-chat-item').forEach(item => {
             item.classList.remove('active');
             if (item.dataset.chatId === chatId) {
                 item.classList.add('active');
@@ -272,7 +272,7 @@ async function deleteChat(chatId) {
             throw new Error('Failed to delete chat');
         }
 
-        const chatListItem = document.querySelector(`.chat-list-item:has(.chat-item[data-chat-id="${chatId}"])`);
+        const chatListItem = document.querySelector(`.modern-chat-item[data-chat-id="${chatId}"]`);
         chatListItem.remove();
 
         // If deleted chat was current chat, clear messages
@@ -281,7 +281,7 @@ async function deleteChat(chatId) {
             currentChatId = null;
             
             // Load first available chat if exists
-            const firstChat = document.querySelector('.chat-item');
+            const firstChat = document.querySelector('.modern-chat-item');
             if (firstChat) {
                 loadChat(firstChat.dataset.chatId);
             }
@@ -299,7 +299,7 @@ async function updateChatTitle(chatId) {
         }
         
         const data = await response.json();
-        const chatItem = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+        const chatItem = document.querySelector(`.modern-chat-item[data-chat-id="${chatId}"]`);
         if (chatItem) {
             chatItem.textContent = data.title;
         }
