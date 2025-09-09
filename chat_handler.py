@@ -107,6 +107,9 @@ Never put code on the same line as the backticks or language specification.'''
 
 def get_ai_response(messages: List[Dict[str, str]],
                     model: str = "gpt-4o") -> str:
+    if not openai_client:
+        return "AI service is currently unavailable. Please check your API keys."
+    
     # Map the model name to the actual OpenAI model
     actual_model = MODEL_MAPPING.get(model, "gpt-4o")
 
@@ -117,10 +120,13 @@ def get_ai_response(messages: List[Dict[str, str]],
         m["content"]
     } for m in messages]
 
-    response = openai_client.chat.completions.create(
-        model=actual_model, messages=formatted_messages)
-
-    return response.choices[0].message.content or ""
+    try:
+        response = openai_client.chat.completions.create(
+            model=actual_model, messages=formatted_messages)
+        return response.choices[0].message.content or ""
+    except Exception as e:
+        print(f"Error in get_ai_response: {e}")
+        return "Error generating response. Please try again."
 
 
 def generate_chat_summary(messages: List[Dict[str, str]]) -> str:
