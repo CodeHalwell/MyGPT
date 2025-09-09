@@ -172,39 +172,69 @@ body {
 }
 
 /* Modern code block styles */
-.message pre {
-    background: rgba(15, 15, 15, 0.8);
-    border-radius: 12px;
-    padding: 20px;
+.code-block-wrapper {
     margin: 16px 0;
+    border-radius: 12px;
+    background: rgba(15, 15, 15, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    overflow-x: auto;
-    position: relative;
     backdrop-filter: blur(10px);
+    overflow: hidden;
 }
 
-.message pre::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 40px;
+.code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px 12px 0 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.message pre code {
+.code-language {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.copy-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.copy-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    transform: scale(1.05);
+}
+
+.code-block-wrapper pre {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    padding: 20px;
+    overflow-x: auto;
+}
+
+.code-block-wrapper pre code {
     display: block;
     white-space: pre !important;
     tab-size: 4;
     font-family: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', Consolas, monospace;
     line-height: 1.6;
     font-size: 14px;
-    position: relative;
-    z-index: 1;
-    padding-top: 20px;
+    background: transparent;
 }
 
 /* Inline code styles */
@@ -216,6 +246,46 @@ body {
     font-size: 13px;
     border: 1px solid rgba(255, 255, 255, 0.15);
     color: #e6e6e6;
+}
+
+/* Streaming and typing indicator styles */
+.message.streaming {
+    position: relative;
+}
+
+.typing-indicator {
+    color: rgba(68, 133, 244, 0.8);
+    font-weight: bold;
+    animation: blink 1s infinite;
+    margin-left: 2px;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+.streaming-content {
+    position: relative;
+}
+
+/* Modern loading spinner in the assistant style */
+.message.assistant.streaming::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: -40px;
+    width: 20px;
+    height: 20px;
+    border: 2px solid transparent;
+    border-top: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Modern loading indicator */
