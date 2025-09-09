@@ -8,24 +8,47 @@ from mistralai import Mistral
 
 class MultiProviderChatHandler:
     def __init__(self):
-        # Initialize API clients
-        self.openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        # Initialize API clients with better error handling
+        try:
+            openai_key = os.environ.get("OPENAI_API_KEY")
+            if openai_key:
+                self.openai_client = OpenAI(api_key=openai_key)
+            else:
+                self.openai_client = None
+        except Exception as e:
+            print(f"Error initializing OpenAI client: {e}")
+            self.openai_client = None
         
         # Initialize other providers (will use OpenAI as fallback if keys not available)
         try:
-            self.anthropic_client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
-        except:
+            anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
+            if anthropic_key:
+                self.anthropic_client = Anthropic(api_key=anthropic_key)
+            else:
+                self.anthropic_client = None
+        except Exception as e:
+            print(f"Error initializing Anthropic client: {e}")
             self.anthropic_client = None
             
         try:
-            genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
-            self.google_client = genai
-        except:
+            google_key = os.environ.get("GOOGLE_API_KEY")
+            if google_key:
+                genai.configure(api_key=google_key)
+                self.google_client = genai
+            else:
+                self.google_client = None
+        except Exception as e:
+            print(f"Error initializing Google client: {e}")
             self.google_client = None
             
         try:
-            self.mistral_client = Mistral(api_key=os.environ.get("MISTRAL_API_KEY"))
-        except:
+            mistral_key = os.environ.get("MISTRAL_API_KEY")
+            if mistral_key:
+                self.mistral_client = Mistral(api_key=mistral_key)
+            else:
+                self.mistral_client = None
+        except Exception as e:
+            print(f"Error initializing Mistral client: {e}")
             self.mistral_client = None
         
         # Model mappings for each provider
@@ -79,7 +102,7 @@ class MultiProviderChatHandler:
         actual_model = self.model_mappings.get(model, model)
         
         try:
-            if provider == "openai":
+            if provider == "openai" and self.openai_client:
                 return self._get_openai_response(messages, actual_model)
             elif provider == "anthropic" and self.anthropic_client:
                 return self._get_anthropic_response(messages, actual_model)
@@ -89,11 +112,18 @@ class MultiProviderChatHandler:
                 return self._get_mistral_response(messages, actual_model)
             else:
                 # Fallback to OpenAI if other providers not available
-                return self._get_openai_response(messages, "gpt-4o")
+                if self.openai_client:
+                    return self._get_openai_response(messages, "gpt-4o")
+                else:
+                    # Return a fallback response if no providers are available
+                    return self._get_fallback_response()
         except Exception as e:
-            # If any provider fails, fallback to OpenAI
+            # If any provider fails, fallback to OpenAI or fallback response
             print(f"Error with {provider}: {e}")
-            return self._get_openai_response(messages, "gpt-4o")
+            if self.openai_client:
+                return self._get_openai_response(messages, "gpt-4o")
+            else:
+                return self._get_fallback_response()
     
     def _get_openai_response(self, messages: List[Dict[str, str]], model: str) -> Iterator[str]:
         """Get response from OpenAI"""
@@ -191,6 +221,12 @@ Never put code on the same line as the backticks or language specification.'''
             if chunk.data and hasattr(chunk.data, 'choices') and chunk.data.choices:
                 if chunk.data.choices[0].delta.content:
                     yield chunk.data.choices[0].delta.content
+    
+    def _get_fallback_response(self) -> Iterator[str]:
+        """Fallback response when no AI providers are available"""
+        fallback_message = "I apologize, but the AI service is currently unavailable. Please check your API keys and try again later."
+        for char in fallback_message:
+            yield char
 
 # Create global instance
 multi_provider_handler = MultiProviderChatHandler()
