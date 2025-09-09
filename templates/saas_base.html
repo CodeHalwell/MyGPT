@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html data-bs-theme="dark" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Chat Assistant - Enterprise AI Solutions{% endblock %}</title>
+    
+    <!-- Meta tags for SEO and social media -->
+    <meta name="description" content="Professional AI chat assistant platform for businesses and developers">
+    <meta name="keywords" content="AI, Chat, Assistant, OpenAI, Enterprise, SaaS">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/saas.css') }}">
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/html.min.js"></script>
+</head>
+<body class="saas-app">
+    <!-- Modern SaaS Navigation -->
+    <nav class="saas-navbar">
+        <div class="navbar-container">
+            <!-- Brand/Logo -->
+            <div class="navbar-brand-section">
+                <a href="{{ url_for('index') }}" class="saas-brand">
+                    <div class="brand-icon">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <span class="brand-text">AI Assistant Pro</span>
+                </a>
+            </div>
+
+            <!-- Main Navigation -->
+            {% if current_user.is_authenticated %}
+            <div class="navbar-nav-section">
+                <nav class="main-nav">
+                    <a href="{{ url_for('index') }}" class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+                        <i class="bi bi-house"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="{{ url_for('chat') }}" class="nav-item {% if request.endpoint == 'chat' %}active{% endif %}">
+                        <i class="bi bi-chat-dots"></i>
+                        <span>Chat</span>
+                    </a>
+                    {% if current_user.is_admin %}
+                    <a href="{{ url_for('admin') }}" class="nav-item {% if request.endpoint == 'admin' %}active{% endif %}">
+                        <i class="bi bi-shield-check"></i>
+                        <span>Admin</span>
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+
+            <!-- User Section -->
+            <div class="navbar-user-section">
+                <div class="user-menu-dropdown">
+                    <button class="user-menu-trigger" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="user-avatar">
+                            <span>{{ current_user.username[:1].upper() }}</span>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">{{ current_user.username }}</span>
+                            <span class="user-role">{% if current_user.is_admin %}Admin{% else %}User{% endif %}</span>
+                        </div>
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <ul class="dropdown-menu user-dropdown">
+                        <li><a class="dropdown-item" href="{{ url_for('settings') }}">
+                            <i class="bi bi-gear"></i> Settings
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('logout') }}">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="saas-main">
+        {% if current_user.is_authenticated %}
+        <!-- Sidebar Navigation for larger screens -->
+        <aside class="saas-sidebar">
+            <div class="sidebar-nav">
+                <a href="{{ url_for('index') }}" class="sidebar-item {% if request.endpoint == 'index' %}active{% endif %}">
+                    <i class="bi bi-house"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('chat') }}" class="sidebar-item {% if request.endpoint == 'chat' %}active{% endif %}">
+                    <i class="bi bi-chat-dots"></i>
+                    <span>Chat</span>
+                </a>
+                {% if current_user.is_admin %}
+                <a href="{{ url_for('admin') }}" class="sidebar-item {% if request.endpoint == 'admin' %}active{% endif %}">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Admin</span>
+                </a>
+                {% endif %}
+                <a href="{{ url_for('settings') }}" class="sidebar-item {% if request.endpoint == 'settings' %}active{% endif %}">
+                    <i class="bi bi-gear"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </aside>
+        {% endif %}
+
+        <!-- Content Area -->
+        <div class="saas-content">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <div class="flash-messages">
+                {% for message in messages %}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="bi bi-info-circle"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <!-- Page Content -->
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="saas-footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="footer-brand-text">AI Assistant Pro</span>
+                    <span class="footer-tagline">Powered by advanced AI technology</span>
+                </div>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">Privacy</a>
+                    <a href="#" class="footer-link">Terms</a>
+                    <a href="#" class="footer-link">Support</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Additional JavaScript -->
+    <script>
+        // Initialize tooltips and other Bootstrap components
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

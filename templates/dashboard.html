@@ -1,0 +1,142 @@
+{% extends "saas_base.html" %}
+
+{% block title %}Dashboard - AI Chat Assistant{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Welcome Section -->
+    <div class="welcome-section">
+        <h1 class="dashboard-title">Welcome back, {{ current_user.username }}</h1>
+        <p class="dashboard-subtitle">Manage your AI conversations and explore powerful features</p>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <a href="{{ url_for('chat') }}" class="action-card primary">
+            <div class="action-icon">
+                <i class="bi bi-chat-dots"></i>
+            </div>
+            <div class="action-content">
+                <h3>New Chat</h3>
+                <p>Start a conversation with AI</p>
+            </div>
+            <div class="action-arrow">
+                <i class="bi bi-arrow-right"></i>
+            </div>
+        </a>
+        
+        <a href="{{ url_for('chat') }}" class="action-card">
+            <div class="action-icon">
+                <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="action-content">
+                <h3>Recent Chats</h3>
+                <p>Continue your conversations</p>
+            </div>
+            <div class="action-arrow">
+                <i class="bi bi-arrow-right"></i>
+            </div>
+        </a>
+        
+        <a href="{{ url_for('settings') }}" class="action-card">
+            <div class="action-icon">
+                <i class="bi bi-gear"></i>
+            </div>
+            <div class="action-content">
+                <h3>Settings</h3>
+                <p>Customize your experience</p>
+            </div>
+            <div class="action-arrow">
+                <i class="bi bi-arrow-right"></i>
+            </div>
+        </a>
+    </div>
+
+    <!-- Analytics Overview -->
+    <div class="analytics-section">
+        <h2 class="section-title">Usage Analytics</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <i class="bi bi-chat-square-dots"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-number">{{ stats.total_chats }}</div>
+                    <div class="metric-label">Total Conversations</div>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <i class="bi bi-chat-left-text"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-number">{{ stats.total_messages }}</div>
+                    <div class="metric-label">Messages Sent</div>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <i class="bi bi-bar-chart"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-number">{{ stats.avg_messages_per_chat }}</div>
+                    <div class="metric-label">Avg. Messages/Chat</div>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <i class="bi bi-lightning"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-number">AI-Powered</div>
+                    <div class="metric-label">Smart Responses</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    {% if stats.recent_chats %}
+    <div class="recent-activity">
+        <h2 class="section-title">Recent Conversations</h2>
+        <div class="activity-list">
+            {% for chat in stats.recent_chats %}
+            <div class="activity-item" onclick="window.location.href='{{ url_for('chat') }}#{{ chat.id }}'">
+                <div class="activity-icon">
+                    <i class="bi bi-chat-left"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">{{ chat.title or 'Untitled Chat' }}</div>
+                    <div class="activity-meta">
+                        <span class="activity-date">{{ chat.created_at.strftime('%B %d, %Y') }}</span>
+                        <span class="activity-badge">{{ chat.messages|length }} messages</span>
+                    </div>
+                </div>
+                <div class="activity-arrow">
+                    <i class="bi bi-chevron-right"></i>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="view-all-link">
+            <a href="{{ url_for('chat') }}" class="btn-link">
+                View All Conversations <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="bi bi-chat-dots"></i>
+        </div>
+        <h3 class="empty-title">No conversations yet</h3>
+        <p class="empty-description">Start your first AI conversation to see your activity here</p>
+        <a href="{{ url_for('chat') }}" class="btn btn-primary">Start Chatting</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
