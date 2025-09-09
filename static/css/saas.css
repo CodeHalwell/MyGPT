@@ -1023,9 +1023,10 @@
     max-width: none;
 }
 
-/* Fix for broken main content with sidebar */
-.saas-content.main-content {
-    margin-left: 0 !important;
+/* Override saas-content styles for special pages */
+.modern-chat-layout .saas-content,
+.admin-content .saas-content {
+    margin: 0 !important;
     padding: 0 !important;
 }
 
