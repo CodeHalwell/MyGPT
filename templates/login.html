@@ -1,34 +1,254 @@
-{% extends "base.html" %}
+{% extends "saas_base.html" %}
+
+{% block title %}Login - AI Assistant Pro{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="text-center">Login</h3>
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-brand">
+                <div class="brand-icon">
+                    <i class="bi bi-robot"></i>
+                </div>
+                <h1 class="auth-title">Welcome back</h1>
+                <p class="auth-subtitle">Sign in to your AI Assistant Pro account</p>
             </div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Login</button>
-                    </div>
-                </form>
-                <p class="text-center mt-3">
-                    Don't have an account? <a href="{{ url_for('register') }}">Register</a>
+        </div>
+        
+        <div class="auth-body">
+            <form method="POST" class="auth-form">
+                <div class="form-group">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" class="form-control auth-input" id="username" name="username" placeholder="Enter your username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control auth-input" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+                
+                <button type="submit" class="auth-submit-btn">
+                    <span>Sign In</span>
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                <p class="auth-link">
+                    Don't have an account? 
+                    <a href="{{ url_for('register') }}" class="auth-link-accent">Create account</a>
                 </p>
-                <p class="text-center mt-3">
-                    <a href="{{ url_for('forgot_password') }}">Forgot Password?</a>
+                <p class="auth-link">
+                    <a href="{{ url_for('forgot_password') }}" class="auth-link-accent">Forgot your password?</a>
                 </p>
             </div>
         </div>
     </div>
+    
+    <div class="auth-background">
+        <div class="auth-bg-gradient"></div>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.auth-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    position: relative;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+}
+
+.auth-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.auth-bg-gradient {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    right: -50%;
+    bottom: -50%;
+    background: radial-gradient(circle at 30% 20%, rgba(68, 133, 244, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(52, 168, 83, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 90%, rgba(251, 188, 4, 0.1) 0%, transparent 50%);
+    animation: authGlow 20s ease-in-out infinite;
+}
+
+@keyframes authGlow {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.1) rotate(180deg); }
+}
+
+.auth-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    padding: 3rem;
+    width: 100%;
+    max-width: 480px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.auth-brand .brand-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 8px 32px rgba(68, 133, 244, 0.3);
+}
+
+.auth-title {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    background: linear-gradient(135deg, #ffffff, #e0e0e0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.auth-subtitle {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.auth-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.auth-form .form-label {
+    display: block;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.auth-input {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    padding: 12px 16px !important;
+    font-size: 16px !important;
+    width: 100% !important;
+    transition: all 0.3s ease !important;
+}
+
+.auth-input:focus {
+    outline: none !important;
+    border-color: rgba(68, 133, 244, 0.5) !important;
+    box-shadow: 0 0 0 3px rgba(68, 133, 244, 0.1) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.auth-input::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.auth-submit-btn {
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    border: none;
+    border-radius: 12px;
+    padding: 14px 24px;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.auth-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(68, 133, 244, 0.3);
+    color: white;
+}
+
+.auth-submit-btn:active {
+    transform: translateY(0);
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.auth-link {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    margin: 0.5rem 0;
+}
+
+.auth-link-accent {
+    color: #4285f4;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.auth-link-accent:hover {
+    color: #5294ff;
+    text-decoration: none;
+}
+
+/* Hide main SaaS navigation on auth pages */
+.saas-navbar,
+.saas-sidebar,
+.saas-footer {
+    display: none !important;
+}
+
+/* Adjust main content for auth pages */
+.saas-app .saas-main {
+    margin-left: 0 !important;
+}
+
+@media (max-width: 768px) {
+    .auth-container {
+        padding: 1rem;
+    }
+    
+    .auth-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .auth-title {
+        font-size: 28px;
+    }
+}
+</style>
 {% endblock %}

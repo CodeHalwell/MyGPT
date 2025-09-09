@@ -3,7 +3,8 @@ from flask import render_template, redirect, url_for, request, flash, jsonify, R
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db
 from models import User, Chat, Message, Tag
-from chat_handler import get_ai_response_stream, generate_chat_summary, suggest_tags, MODEL_MAPPING
+from multi_provider_chat_handler import get_ai_response_stream
+from chat_handler import generate_chat_summary, suggest_tags, MODEL_MAPPING
 from email_handler import (
     send_registration_email, send_approval_email, send_admin_notification_email,
     send_password_reset_email
