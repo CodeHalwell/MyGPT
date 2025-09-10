@@ -13,6 +13,7 @@
                 {% endif %}
                 
                 <form method="POST" action="{{ url_for('update_username') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <h4 class="mb-3">Change Username</h4>
                     <div class="mb-3">
                         <label for="new_username" class="form-label">New Username</label>
@@ -30,6 +31,7 @@
                 <hr class="my-4">
 
                 <form method="POST" action="{{ url_for('update_password') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <h4 class="mb-3">Change Password</h4>
                     <div class="mb-3">
                         <label for="current_password" class="form-label">Current Password</label>

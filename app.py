@@ -2,6 +2,7 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
 from sqlalchemy.orm import DeclarativeBase
 import logging
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -19,6 +20,7 @@ class Base(DeclarativeBase):
 
 db = SQLAlchemy(model_class=Base)
 login_manager = LoginManager()
+csrf = CSRFProtect()
 
 def create_app():
     app = Flask(__name__)
@@ -65,8 +67,9 @@ def create_app():
     try:
         db.init_app(app)
         login_manager.init_app(app)
+        csrf.init_app(app)
         login_manager.login_view = 'login'
-        logger.info("Database and login manager initialized successfully")
+        logger.info("Database, login manager, and CSRF protection initialized successfully")
     except Exception as e:
         logger.error(f"Error initializing extensions: {str(e)}")
         raise

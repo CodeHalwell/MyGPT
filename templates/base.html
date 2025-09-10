@@ -44,5 +44,10 @@
 
         {% block content %}{% endblock %}
     </div>
+    
+    <script>
+        // CSRF token for AJAX requests
+        window.csrfToken = "{{ csrf_token() }}";
+    </script>
 </body>
 </html>

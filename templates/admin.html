@@ -133,6 +133,7 @@
         </div>
         <div class="saas-card-body">
             <form id="newTagForm" class="mb-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="row g-3">
                     <div class="col-sm-6">
                         <input type="text" class="form-control" id="tagName" placeholder="Tag name" required>
@@ -199,7 +200,8 @@ async function approveUser(userId) {
         const response = await fetch(`/admin/user/${userId}/approve`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.csrfToken
             }
         });
         
@@ -226,7 +228,8 @@ async function rejectUser(userId) {
         const response = await fetch(`/admin/user/${userId}/reject`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.csrfToken
             }
         });
         
@@ -253,7 +256,8 @@ async function deleteUser(userId) {
         const response = await fetch(`/admin/user/${userId}/delete`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.csrfToken
             }
         });
         
@@ -276,7 +280,8 @@ async function toggleAdminStatus(userId, isAdmin) {
         const response = await fetch(`/admin/user/${userId}/toggle-admin`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.csrfToken
             },
             body: JSON.stringify({ is_admin: isAdmin })
         });
@@ -305,7 +310,8 @@ document.getElementById('newTagForm').addEventListener('submit', async (e) => {
         const response = await fetch('/admin/tag/new', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.csrfToken
             },
             body: JSON.stringify({ name, color })
         });
@@ -333,7 +339,8 @@ async function deleteTag(tagId) {
         const response = await fetch(`/admin/tag/${tagId}`, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.csrfToken
             }
         });
         
@@ -365,7 +372,8 @@ async function editTag(tagId) {
             const response = await fetch(`/admin/tag/${tagId}/update`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': window.csrfToken
                 },
                 body: JSON.stringify({ color: newColor })
             });
