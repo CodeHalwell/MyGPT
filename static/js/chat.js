@@ -62,7 +62,8 @@ async function createNewChat() {
         const response = await fetch('/chat/new', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.csrfToken
             }
         });
         
@@ -146,7 +147,8 @@ async function sendMessage(e) {
             const response = await fetch('/chat/new', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': window.csrfToken
                 }
             });
             
@@ -171,7 +173,8 @@ async function sendMessage(e) {
         const saveResponse = await fetch(`/chat/${currentChatId}/message`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.csrfToken
             },
             body: JSON.stringify({ message, model })
         });
@@ -264,7 +267,8 @@ async function deleteChat(chatId) {
         const response = await fetch(`/chat/${chatId}/delete`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.csrfToken
             }
         });
 
