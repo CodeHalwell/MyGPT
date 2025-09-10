@@ -66,12 +66,13 @@ def create_app():
     app.config['ADMIN_USERNAME'] = os.environ.get('ADMIN_USERNAME', 'codhe')
     app.config['ADMIN_EMAIL'] = os.environ.get('ADMIN_EMAIL', 'danielhalwell@gmail.com')
     
-    # Production security settings
-    app.config['SESSION_COOKIE_SECURE'] = True
+    # Security settings (adjust for development vs production)
+    is_production = os.environ.get('REPLIT_DEPLOYMENT') == 'production'
+    app.config['SESSION_COOKIE_SECURE'] = is_production  # Only require HTTPS in production
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
     app.config['REMEMBER_COOKIE_DURATION'] = 2592000  # 30 days
-    app.config['REMEMBER_COOKIE_SECURE'] = True
+    app.config['REMEMBER_COOKIE_SECURE'] = is_production  # Only require HTTPS in production
     app.config['REMEMBER_COOKIE_HTTPONLY'] = True
 
     # Initialize extensions

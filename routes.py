@@ -9,12 +9,13 @@ from email_handler import (
     send_registration_email, send_approval_email, send_admin_notification_email,
     send_password_reset_email
 )
-from schemas import (
-    UserRegistrationSchema, UserLoginSchema, ForgotPasswordSchema, ResetPasswordSchema,
-    ChatMessageSchema, StreamChatSchema, UpdateUsernameSchema, UpdatePasswordSchema,
-    AdminToggleSchema, CreateTagSchema, UpdateTagSchema,
-    validate_form_data, validate_json_data, get_validation_errors_string
-)
+# Temporarily removed complex validation schemas to fix login issues
+# from schemas import (
+#     UserRegistrationSchema, UserLoginSchema, ForgotPasswordSchema, ResetPasswordSchema,
+#     ChatMessageSchema, StreamChatSchema, UpdateUsernameSchema, UpdatePasswordSchema,
+#     AdminToggleSchema, CreateTagSchema, UpdateTagSchema,
+#     validate_form_data, validate_json_data, get_validation_errors_string
+# )
 import secrets
 from datetime import datetime, timedelta
 
@@ -82,16 +83,16 @@ def login():
         return redirect(url_for('index'))
     
     if request.method == 'POST':
-        # Validate form data using Marshmallow schema
-        validated_data, errors = validate_form_data(UserLoginSchema, request.form)
+        # Get form data directly without complex validation for now
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
         
-        if errors:
-            error_message = get_validation_errors_string(errors)
-            flash(error_message)
+        if not username or not password:
+            flash('Please enter both username and password.')
             return render_template('login.html')
         
-        user = User.query.filter_by(username=validated_data['username']).first()
-        if user and user.check_password(validated_data['password']):
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
             if not user.is_approved:
                 flash('Your account is pending approval from an administrator.')
                 return render_template('pending_approval.html')
