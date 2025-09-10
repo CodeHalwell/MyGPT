@@ -17,6 +17,7 @@
         
         <div class="auth-body">
             <form method="POST" class="auth-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="form-group">
                     <label for="username" class="form-label">Username</label>
                     <input type="text" class="form-control auth-input" id="username" name="username" placeholder="Enter your username" required>

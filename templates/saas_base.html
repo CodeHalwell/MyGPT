@@ -156,6 +156,9 @@
 
     <!-- Additional JavaScript -->
     <script>
+        // CSRF token for AJAX requests
+        window.csrfToken = "{{ csrf_token() }}";
+        
         // Initialize tooltips and other Bootstrap components
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
