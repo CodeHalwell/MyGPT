@@ -212,7 +212,8 @@ def validate_json_data(schema_class, data):
         validated_data = schema.load(data)
         return validated_data, None
     except ValidationError as err:
-        return None, err.messages
+        # Return empty dict instead of None to prevent KeyError issues
+        return {}, err.messages
 
 
 def validate_form_data(schema_class, form_data, context=None):
@@ -229,7 +230,8 @@ def validate_form_data(schema_class, form_data, context=None):
         validated_data = schema.load(form_data)
         return validated_data, None
     except ValidationError as err:
-        return None, err.messages
+        # Return empty dict instead of None to prevent KeyError issues
+        return {}, err.messages
 
 
 def get_validation_errors_string(errors):

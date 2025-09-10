@@ -9,13 +9,12 @@ from email_handler import (
     send_registration_email, send_approval_email, send_admin_notification_email,
     send_password_reset_email
 )
-# Temporarily removed complex validation schemas to fix login issues
-# from schemas import (
-#     UserRegistrationSchema, UserLoginSchema, ForgotPasswordSchema, ResetPasswordSchema,
-#     ChatMessageSchema, StreamChatSchema, UpdateUsernameSchema, UpdatePasswordSchema,
-#     AdminToggleSchema, CreateTagSchema, UpdateTagSchema,
-#     validate_form_data, validate_json_data, get_validation_errors_string
-# )
+from schemas import (
+    UserRegistrationSchema, UserLoginSchema, ForgotPasswordSchema, ResetPasswordSchema,
+    ChatMessageSchema, StreamChatSchema, UpdateUsernameSchema, UpdatePasswordSchema,
+    AdminToggleSchema, CreateTagSchema, UpdateTagSchema,
+    validate_form_data, validate_json_data, get_validation_errors_string
+)
 import secrets
 from datetime import datetime, timedelta
 
@@ -253,15 +252,15 @@ def save_message(chat_id):
     if chat.user_id != current_user.id:
         return jsonify({'error': 'Unauthorized'}), 403
     
-    # Validate JSON data using Marshmallow schema
-    validated_data, errors = validate_json_data(ChatMessageSchema, request.get_json() or {})
+    # Get message content directly from JSON
+    json_data = request.get_json() or {}
+    message_content = json_data.get('message', '').strip()
     
-    if errors:
-        error_message = get_validation_errors_string(errors)
-        return jsonify({'error': error_message}), 400
+    if not message_content:
+        return jsonify({'error': 'Message content is required'}), 400
     
     message = Message(chat_id=chat_id,
-                     content=validated_data['message'],
+                     content=message_content,
                      role='user')
     db.session.add(message)
     db.session.commit()
@@ -275,19 +274,13 @@ def stream_response(chat_id):
     if chat.user_id != current_user.id:
         return jsonify({'error': 'Unauthorized'}), 403
     
-    # Validate query parameters using Marshmallow schema
-    validated_data, errors = validate_form_data(StreamChatSchema, request.args)
-    
-    if errors:
-        error_message = get_validation_errors_string(errors)
-        return jsonify({'error': error_message}), 400
+    # Get model directly from query parameters
+    model = request.args.get('model', 'gpt-4o')
     
     messages = [{
         'role': msg.role,
         'content': msg.content
     } for msg in chat.messages]
-    
-    model = validated_data['model']
     
     def generate():
         response_content = []
