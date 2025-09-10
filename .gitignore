@@ -1,8 +1,16 @@
-# Python bytecode
 __pycache__/
 *.py[cod]
 *$py.class
 
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Database files
+*.db
+*.sqlite3
+instance/
 # SQLite databases
 *.db
 *.sqlite3
@@ -30,6 +38,12 @@ dist/
 .DS_Store
 Thumbs.db
 
+# Test files and temporary files
+test*.db
+*.tmp
+
+# Installation artifacts
+=*
 # Logs
 *.log
 
@@ -37,3 +51,4 @@ Thumbs.db
 *.tmp
 *.temp
 __pycache__/
+
