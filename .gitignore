@@ -1,3 +1,18 @@
+# Pytest
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env
+
+# IDE
 __pycache__/
 *.py[cod]
 *$py.class
@@ -34,6 +49,24 @@ dist/
 *.swp
 *.swo
 
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local development
+.env.local
+
+# Database
+*.db
+*.sqlite3
+
+# Temporary files
+/tmp/
+*.tmp
+*.temp
 # OS files
 .DS_Store
 Thumbs.db
@@ -51,4 +84,3 @@ test*.db
 *.tmp
 *.temp
 __pycache__/
-
