@@ -125,6 +125,7 @@
             <!-- Modern Input Area -->
             <div class="modern-input-container">
                 <form id="messageForm" class="modern-message-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div class="input-wrapper">
                         <textarea 
                             id="messageInput" 
