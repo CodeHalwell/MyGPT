@@ -63,13 +63,20 @@ async function createNewChat() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRFToken': window.csrfToken
             },
+            credentials: 'same-origin',
             body: JSON.stringify({ csrf_token: window.csrfToken })
         });
         
+        console.log('Response status:', response.status);
+        console.log('Response URL:', response.url);
+        
         if (!response.ok) {
-            throw new Error('Failed to create new chat');
+            const errorText = await response.text();
+            console.log('Response body:', errorText);
+            throw new Error(`Failed to create new chat: ${response.status} - ${errorText}`);
         }
         
         const data = await response.json();
