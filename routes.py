@@ -9,6 +9,12 @@ from email_handler import (
     send_registration_email, send_approval_email, send_admin_notification_email,
     send_password_reset_email
 )
+from schemas import (
+    UserRegistrationSchema, UserLoginSchema, ForgotPasswordSchema, ResetPasswordSchema,
+    ChatMessageSchema, StreamChatSchema, UpdateUsernameSchema, UpdatePasswordSchema,
+    AdminToggleSchema, CreateTagSchema, UpdateTagSchema,
+    validate_form_data, validate_json_data, get_validation_errors_string
+)
 import secrets
 from datetime import datetime, timedelta
 
@@ -76,8 +82,16 @@ def login():
         return redirect(url_for('index'))
     
     if request.method == 'POST':
-        user = User.query.filter_by(username=request.form['username']).first()
-        if user and user.check_password(request.form['password']):
+        # Validate form data using Marshmallow schema
+        validated_data, errors = validate_form_data(UserLoginSchema, request.form)
+        
+        if errors:
+            error_message = get_validation_errors_string(errors)
+            flash(error_message)
+            return render_template('login.html')
+        
+        user = User.query.filter_by(username=validated_data['username']).first()
+        if user and user.check_password(validated_data['password']):
             if not user.is_approved:
                 flash('Your account is pending approval from an administrator.')
                 return render_template('pending_approval.html')
@@ -99,8 +113,15 @@ def forgot_password():
         return redirect(url_for('index'))
     
     if request.method == 'POST':
-        email = request.form.get('email')
-        user = User.query.filter_by(email=email).first()
+        # Validate form data using Marshmallow schema
+        validated_data, errors = validate_form_data(ForgotPasswordSchema, request.form)
+        
+        if errors:
+            error_message = get_validation_errors_string(errors)
+            flash(error_message)
+            return render_template('forgot_password.html')
+        
+        user = User.query.filter_by(email=validated_data['email']).first()
         
         if user:
             token = secrets.token_urlsafe(32)
@@ -131,8 +152,15 @@ def reset_password(token):
         return redirect(url_for('login'))
     
     if request.method == 'POST':
-        password = request.form.get('password')
-        user.set_password(password)
+        # Validate form data using Marshmallow schema
+        validated_data, errors = validate_form_data(ResetPasswordSchema, request.form)
+        
+        if errors:
+            error_message = get_validation_errors_string(errors)
+            flash(error_message)
+            return render_template('reset_password.html')
+        
+        user.set_password(validated_data['password'])
         user.reset_token = None
         user.reset_token_expiry = None
         db.session.commit()
@@ -148,18 +176,18 @@ def register():
         return redirect(url_for('index'))
     
     if request.method == 'POST':
-        if User.query.filter_by(username=request.form['username']).first():
-            flash('Username already exists')
-            return redirect(url_for('register'))
+        # Validate form data using Marshmallow schema
+        validated_data, errors = validate_form_data(UserRegistrationSchema, request.form)
         
-        if User.query.filter_by(email=request.form['email']).first():
-            flash('Email already registered')
+        if errors:
+            error_message = get_validation_errors_string(errors)
+            flash(error_message)
             return redirect(url_for('register'))
         
         user = User()
-        user.username = request.form['username']
-        user.email = request.form['email']
-        user.set_password(request.form['password'])
+        user.username = validated_data['username']
+        user.email = validated_data['email']
+        user.set_password(validated_data['password'])
         
         if (user.username == app.config['ADMIN_USERNAME'] and 
             user.email == app.config['ADMIN_EMAIL']):
@@ -224,9 +252,15 @@ def save_message(chat_id):
     if chat.user_id != current_user.id:
         return jsonify({'error': 'Unauthorized'}), 403
     
-    data = request.get_json()
+    # Validate JSON data using Marshmallow schema
+    validated_data, errors = validate_json_data(ChatMessageSchema, request.get_json() or {})
+    
+    if errors:
+        error_message = get_validation_errors_string(errors)
+        return jsonify({'error': error_message}), 400
+    
     message = Message(chat_id=chat_id,
-                     content=data['message'],
+                     content=validated_data['message'],
                      role='user')
     db.session.add(message)
     db.session.commit()
@@ -240,12 +274,19 @@ def stream_response(chat_id):
     if chat.user_id != current_user.id:
         return jsonify({'error': 'Unauthorized'}), 403
     
+    # Validate query parameters using Marshmallow schema
+    validated_data, errors = validate_form_data(StreamChatSchema, request.args)
+    
+    if errors:
+        error_message = get_validation_errors_string(errors)
+        return jsonify({'error': error_message}), 400
+    
     messages = [{
         'role': msg.role,
         'content': msg.content
     } for msg in chat.messages]
     
-    model = request.args.get('model', 'gpt-4o')
+    model = validated_data['model']
     
     def generate():
         response_content = []
@@ -339,9 +380,15 @@ def toggle_admin(user_id):
     if user_id == current_user.id:
         return jsonify({'error': 'Cannot modify your own admin status'}), 400
     
+    # Validate JSON data using Marshmallow schema
+    validated_data, errors = validate_json_data(AdminToggleSchema, request.get_json() or {})
+    
+    if errors:
+        error_message = get_validation_errors_string(errors)
+        return jsonify({'error': error_message}), 400
+    
     user = User.query.get_or_404(user_id)
-    data = request.get_json()
-    user.is_admin = data.get('is_admin', False)
+    user.is_admin = validated_data['is_admin']
     db.session.commit()
     
     return jsonify({'status': 'success'})
@@ -409,17 +456,17 @@ def create_tag():
     if not current_user.is_admin:
         return jsonify({'error': 'Unauthorized access'}), 403
     
-    data = request.get_json()
-    name = data.get('name', '').strip().lower()
-    color = data.get('color', generate_random_color())
+    # Validate JSON data using Marshmallow schema
+    validated_data, errors = validate_json_data(CreateTagSchema, request.get_json() or {})
     
-    if not name:
-        return jsonify({'error': 'Tag name is required'}), 400
+    if errors:
+        error_message = get_validation_errors_string(errors)
+        return jsonify({'error': error_message}), 400
     
-    if Tag.query.filter_by(name=name).first():
-        return jsonify({'error': 'Tag already exists'}), 400
+    tag_name = validated_data['name'].strip().lower()
+    tag_color = validated_data['color'] or generate_random_color()
     
-    tag = Tag(name=name, color=color)
+    tag = Tag(name=tag_name, color=tag_color)
     db.session.add(tag)
     db.session.commit()
     
@@ -443,12 +490,16 @@ def update_tag(tag_id):
     if not current_user.is_admin:
         return jsonify({'error': 'Unauthorized access'}), 403
     
-    tag = Tag.query.get_or_404(tag_id)
-    data = request.get_json()
+    # Validate JSON data using Marshmallow schema
+    validated_data, errors = validate_json_data(UpdateTagSchema, request.get_json() or {})
     
-    if 'color' in data:
-        tag.color = data['color']
-        db.session.commit()
+    if errors:
+        error_message = get_validation_errors_string(errors)
+        return jsonify({'error': error_message}), 400
+    
+    tag = Tag.query.get_or_404(tag_id)
+    tag.color = validated_data['color']
+    db.session.commit()
     
     return jsonify({'status': 'success'})
 
@@ -460,22 +511,23 @@ def settings():
 @app.route('/settings/update-username', methods=['POST'])
 @login_required
 def update_username():
-    new_username = request.form.get('new_username')
-    current_password = request.form.get('current_password')
+    # Validate form data using Marshmallow schema
+    validated_data, errors = validate_form_data(UpdateUsernameSchema, request.form)
     
-    if not current_user.check_password(current_password):
+    if errors:
+        error_message = get_validation_errors_string(errors)
+        flash(error_message)
+        return redirect(url_for('settings'))
+    
+    if not current_user.check_password(validated_data['current_password']):
         flash('Current password is incorrect')
         return redirect(url_for('settings'))
     
-    if new_username == current_user.username:
+    if validated_data['new_username'] == current_user.username:
         flash('New username must be different from current username')
         return redirect(url_for('settings'))
     
-    if User.query.filter_by(username=new_username).first():
-        flash('Username already exists')
-        return redirect(url_for('settings'))
-    
-    current_user.username = new_username
+    current_user.username = validated_data['new_username']
     db.session.commit()
     flash('Username updated successfully')
     return redirect(url_for('settings'))
@@ -483,23 +535,31 @@ def update_username():
 @app.route('/settings/update-password', methods=['POST'])
 @login_required
 def update_password():
-    current_password = request.form.get('current_password')
-    new_password = request.form.get('new_password')
-    confirm_password = request.form.get('confirm_password')
+    # Prepare context for password matching validation
+    form_data = request.form.to_dict()
+    context = {'confirm_password': form_data.get('confirm_password')}
     
-    if not current_user.check_password(current_password):
+    # Validate form data using Marshmallow schema
+    validated_data, errors = validate_form_data(UpdatePasswordSchema, form_data, context)
+    
+    if errors:
+        error_message = get_validation_errors_string(errors)
+        flash(error_message)
+        return redirect(url_for('settings'))
+    
+    if not current_user.check_password(validated_data['current_password']):
         flash('Current password is incorrect')
         return redirect(url_for('settings'))
     
-    if new_password != confirm_password:
+    if validated_data['new_password'] != validated_data['confirm_password']:
         flash('New passwords do not match')
         return redirect(url_for('settings'))
     
-    if current_password == new_password:
+    if validated_data['current_password'] == validated_data['new_password']:
         flash('New password must be different from current password')
         return redirect(url_for('settings'))
     
-    current_user.set_password(new_password)
+    current_user.set_password(validated_data['new_password'])
     db.session.commit()
     flash('Password updated successfully')
     return redirect(url_for('settings'))
