@@ -42,14 +42,25 @@ def create_app():
     
     # Production configurations
     app.secret_key = os.environ.get("FLASK_SECRET_KEY") or os.urandom(24)
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "pool_recycle": 300,
-        "pool_pre_ping": True,
-        "pool_size": 10,
-        "max_overflow": 20,
-        "pool_timeout": 30
-    }
+    database_url = os.environ.get("DATABASE_URL")
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+    
+    # Configure engine options based on database type
+    if database_url and 'sqlite' in database_url:
+        # SQLite configuration
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+            "pool_pre_ping": True,
+        }
+    else:
+        # PostgreSQL configuration
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+            "pool_recycle": 300,
+            "pool_pre_ping": True,
+            "pool_size": 10,
+            "max_overflow": 20,
+            "pool_timeout": 30
+        }
+    
     app.config['ADMIN_USERNAME'] = os.environ.get('ADMIN_USERNAME', 'codhe')
     app.config['ADMIN_EMAIL'] = os.environ.get('ADMIN_EMAIL', 'danielhalwell@gmail.com')
     
