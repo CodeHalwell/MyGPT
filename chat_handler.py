@@ -6,8 +6,12 @@ from openai.types.chat import ChatCompletionMessage, ChatCompletionMessageParam,
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 try:
     if OPENAI_API_KEY:
-        # Initialize OpenAI client without any additional arguments that might cause issues
-        openai_client = OpenAI(api_key=OPENAI_API_KEY)
+        # Initialize OpenAI client with explicit minimal configuration
+        openai_client = OpenAI(
+            api_key=OPENAI_API_KEY,
+            # Explicitly avoid any proxy configurations that might be set globally
+        )
+        print("OpenAI client initialized successfully in chat_handler")
     else:
         print("No OpenAI API key found - using fallback responses")
         openai_client = None

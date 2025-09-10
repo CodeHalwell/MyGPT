@@ -183,13 +183,20 @@ async function sendMessage(e) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRFToken': window.csrfToken
             },
+            credentials: 'same-origin',
             body: JSON.stringify({ message, model })
         });
 
+        console.log('Message save response status:', saveResponse.status);
+        console.log('Message save response URL:', saveResponse.url);
+
         if (!saveResponse.ok) {
-            throw new Error('Failed to save message');
+            const errorText = await saveResponse.text();
+            console.log('Message save response body:', errorText);
+            throw new Error(`Failed to save message: ${saveResponse.status} - ${errorText}`);
         }
 
         // Close any existing SSE connection
@@ -286,7 +293,9 @@ async function deleteChat(chatId) {
         }
 
         const chatListItem = document.querySelector(`.modern-chat-item[data-chat-id="${chatId}"]`);
-        chatListItem.remove();
+        if (chatListItem) {
+            chatListItem.remove();
+        }
 
         // If deleted chat was current chat, clear messages
         if (currentChatId === chatId) {
