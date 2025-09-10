@@ -64,7 +64,8 @@ async function createNewChat() {
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': window.csrfToken
-            }
+            },
+            body: JSON.stringify({ csrf_token: window.csrfToken })
         });
         
         if (!response.ok) {
@@ -149,7 +150,8 @@ async function sendMessage(e) {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': window.csrfToken
-                }
+                },
+                body: JSON.stringify({ csrf_token: window.csrfToken })
             });
             
             if (!response.ok) {
