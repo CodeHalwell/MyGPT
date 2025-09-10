@@ -148,5 +148,9 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+    // Make CSRF token available to JavaScript
+    window.csrfToken = '{{ csrf_token() }}';
+</script>
 <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 {% endblock %}
