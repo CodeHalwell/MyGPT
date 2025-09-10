@@ -2,6 +2,7 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
 from sqlalchemy.orm import DeclarativeBase
 import logging
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -19,6 +20,7 @@ class Base(DeclarativeBase):
 
 db = SQLAlchemy(model_class=Base)
 login_manager = LoginManager()
+csrf = CSRFProtect()
 
 def create_app():
     app = Flask(__name__)
@@ -42,31 +44,44 @@ def create_app():
     
     # Production configurations
     app.secret_key = os.environ.get("FLASK_SECRET_KEY") or os.urandom(24)
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "pool_recycle": 300,
-        "pool_pre_ping": True,
-        "pool_size": 10,
-        "max_overflow": 20,
-        "pool_timeout": 30
-    }
+    database_url = os.environ.get("DATABASE_URL")
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+    
+    # Configure engine options based on database type
+    if database_url and 'sqlite' in database_url:
+        # SQLite configuration
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+            "pool_pre_ping": True,
+        }
+    else:
+        # PostgreSQL configuration
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+            "pool_recycle": 300,
+            "pool_pre_ping": True,
+            "pool_size": 10,
+            "max_overflow": 20,
+            "pool_timeout": 30
+        }
+    
     app.config['ADMIN_USERNAME'] = os.environ.get('ADMIN_USERNAME', 'codhe')
     app.config['ADMIN_EMAIL'] = os.environ.get('ADMIN_EMAIL', 'danielhalwell@gmail.com')
     
-    # Production security settings
-    app.config['SESSION_COOKIE_SECURE'] = True
+    # Security settings (adjust for development vs production)
+    is_production = os.environ.get('REPLIT_DEPLOYMENT') == 'production'
+    app.config['SESSION_COOKIE_SECURE'] = is_production  # Only require HTTPS in production
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
     app.config['REMEMBER_COOKIE_DURATION'] = 2592000  # 30 days
-    app.config['REMEMBER_COOKIE_SECURE'] = True
+    app.config['REMEMBER_COOKIE_SECURE'] = is_production  # Only require HTTPS in production
     app.config['REMEMBER_COOKIE_HTTPONLY'] = True
 
     # Initialize extensions
     try:
         db.init_app(app)
         login_manager.init_app(app)
+        csrf.init_app(app)
         login_manager.login_view = 'login'
-        logger.info("Database and login manager initialized successfully")
+        logger.info("Database, login manager, and CSRF protection initialized successfully")
     except Exception as e:
         logger.error(f"Error initializing extensions: {str(e)}")
         raise
