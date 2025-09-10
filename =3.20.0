@@ -1,8 +1,0 @@
-Defaulting to user installation because normal site-packages is not writeable
-Collecting marshmallow
-  Downloading marshmallow-4.0.1-py3-none-any.whl.metadata
-     - 7.4 kB ? 0:00:00
-Downloading marshmallow-4.0.1-py3-none-any.whl
-   - 48.4 kB 7.3 MB/s 0:00:00
-Installing collected packages: marshmallow
-Successfully installed marshmallow-4.0.1
