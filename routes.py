@@ -227,10 +227,14 @@ def chat():
 @app.route('/chat/new', methods=['POST'])
 @login_required
 def new_chat():
-    chat = Chat(user_id=current_user.id)
-    db.session.add(chat)
-    db.session.commit()
-    return jsonify({'chat_id': chat.id})
+    try:
+        chat = Chat(user_id=current_user.id)
+        db.session.add(chat)
+        db.session.commit()
+        return jsonify({'chat_id': chat.id})
+    except Exception as e:
+        print(f"Error creating chat: {e}")
+        return jsonify({'error': 'Failed to create chat'}), 500
 
 @app.route('/chat/<int:chat_id>/messages')
 @login_required
