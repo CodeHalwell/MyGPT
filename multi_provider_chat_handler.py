@@ -12,11 +12,18 @@ class MultiProviderChatHandler:
         try:
             openai_key = os.environ.get("OPENAI_API_KEY")
             if openai_key:
-                self.openai_client = OpenAI(api_key=openai_key)
+                # Initialize OpenAI client with minimal configuration, no extra parameters
+                self.openai_client = OpenAI(
+                    api_key=openai_key,
+                    # Explicitly avoid any proxy configurations that might be set globally
+                )
+                print("OpenAI client initialized successfully")
             else:
+                print("No OpenAI API key found - will use fallback responses")
                 self.openai_client = None
         except Exception as e:
             print(f"Error initializing OpenAI client: {e}")
+            print("Will use fallback responses")
             self.openai_client = None
         
         # Initialize other providers (will use OpenAI as fallback if keys not available)
