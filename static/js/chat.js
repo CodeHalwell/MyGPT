@@ -67,7 +67,7 @@ async function createNewChat() {
                 'X-CSRFToken': window.csrfToken
             },
             credentials: 'same-origin',
-            body: JSON.stringify({ csrf_token: window.csrfToken })
+            body: JSON.stringify({})
         });
         
         console.log('Response status:', response.status);
