@@ -231,7 +231,7 @@ def new_chat():
         chat = Chat(user_id=current_user.id)
         db.session.add(chat)
         db.session.commit()
-        print(f"Successfully created chat with ID: {chat.id}")
+        app.logger.info(f"Successfully created chat with ID: {chat.id}")
         return jsonify({'chat_id': chat.id})
     except Exception as e:
         print(f"Error creating chat: {e}")
