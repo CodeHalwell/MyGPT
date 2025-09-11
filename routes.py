@@ -234,9 +234,7 @@ def new_chat():
         app.logger.info(f"Successfully created chat with ID: {chat.id}")
         return jsonify({'chat_id': chat.id})
     except Exception as e:
-        print(f"Error creating chat: {e}")
-        import traceback
-        traceback.print_exc()
+        app.logger.exception(f"Error creating chat: {e}")
         return jsonify({'error': 'Failed to create chat'}), 500
 
 @app.route('/chat/<int:chat_id>/messages')
