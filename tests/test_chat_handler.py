@@ -2,7 +2,7 @@
 Tests for chat handler utilities.
 """
 import pytest
-from multi_provider_chat_handler import MODEL_MAPPING
+from chat_handler import MODEL_MAPPING
 
 
 class TestChatHandler:
