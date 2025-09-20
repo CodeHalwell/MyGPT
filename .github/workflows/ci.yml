@@ -17,7 +17,6 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test_mygpt
         options: >-
           --health-cmd pg_isready
@@ -70,7 +69,7 @@ jobs:
     - name: Test with pytest
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_mygpt
-        FLASK_SECRET_KEY: test-secret-key-for-ci
+        FLASK_SECRET_KEY: 
         FLASK_ENV: testing
       run: |
         pytest --cov=. --cov-report=xml --cov-report=term-missing
