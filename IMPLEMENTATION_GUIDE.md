@@ -682,67 +682,30 @@ echo "✅ Week 1 verification complete!"
 ## 🔄 Continuous Integration Setup
 
 ### **GitHub Actions Workflow**
+
+The CI workflow has been implemented in `.github/workflows/ci.yml` with secure secret management.
+
+**🔐 Security Enhancement**: All hardcoded passwords and secrets have been replaced with GitHub Actions secrets for enhanced security.
+
+**📝 Setup Required**: Before running the CI workflow, you must configure GitHub repository secrets. See [`CI_SETUP.md`](CI_SETUP.md) for detailed instructions.
+
+**Required Secrets:**
+- `POSTGRES_PASSWORD` - PostgreSQL database password
+- `FLASK_SECRET_KEY` - Flask application secret key
+
+The workflow includes:
+- PostgreSQL service with secure credentials
+- Python dependency installation
+- Code formatting checks (Black, isort)
+- Linting with flake8
+- Test execution with pytest
+- Coverage reporting
+
 ```yaml
-# .github/workflows/ci.yml
-name: CI
-
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_mygpt
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov black isort flake8
-    
-    - name: Code formatting check
-      run: |
-        black --check .
-        isort --check-only .
-    
-    - name: Lint with flake8
-      run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
-    
-    - name: Test with pytest
-      run: |
-        pytest --cov=. --cov-report=xml
-      env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost/test_mygpt
-        FLASK_SECRET_KEY: test-secret-key
-    
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
+# Example of secure environment variables usage:
+env:
+  DATABASE_URL: postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/test_mygpt
+  FLASK_SECRET_KEY: ${{ secrets.FLASK_SECRET_KEY }}
 ```
 
 ---
