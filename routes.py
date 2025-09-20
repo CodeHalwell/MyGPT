@@ -85,9 +85,10 @@ def index():
     # Dashboard with analytics and usage metrics
     total_chats = Chat.query.filter_by(user_id=current_user.id).count()
     total_messages = (
-        Message.query.filter(Message.chat_id.in_(
-            db.session.query(Chat.id).filter(Chat.user_id == current_user.id)
-        )).count()
+        Message.query
+        .join(Chat, Message.chat_id == Chat.id)
+        .filter(Chat.user_id == current_user.id)
+        .count()
     )
     recent_chats = (
         Chat.query.filter_by(user_id=current_user.id)
