@@ -93,6 +93,73 @@
                     <h2 class="current-chat-title">AI Assistant</h2>
                     <p class="current-chat-subtitle">Ask me anything and I'll help you out</p>
                 </div>
+                
+                <!-- User Menu -->
+                <div class="chat-user-menu">
+                    <div class="dropdown">
+                        <button class="user-menu-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="user-avatar">
+                                <i class="bi bi-person-circle"></i>
+                            </div>
+                            <div class="user-info">
+                                <span class="user-name">{{ current_user.username }}</span>
+                                <span class="user-role">{{ 'Admin' if current_user.is_admin else 'User' }}</span>
+                            </div>
+                            <i class="bi bi-chevron-down dropdown-arrow"></i>
+                        </button>
+                        
+                        <ul class="dropdown-menu dropdown-menu-end user-dropdown">
+                            <li class="dropdown-header">
+                                <div class="user-profile-header">
+                                    <div class="user-avatar-large">
+                                        <i class="bi bi-person-circle"></i>
+                                    </div>
+                                    <div class="user-details">
+                                        <strong>{{ current_user.username }}</strong>
+                                        <small>{{ current_user.email }}</small>
+                                        {% if current_user.is_admin %}
+                                        <span class="badge badge-admin">Admin</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('index') }}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    Dashboard
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('settings') }}">
+                                    <i class="bi bi-gear"></i>
+                                    Settings
+                                </a>
+                            </li>
+                            {% if current_user.is_admin %}
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('admin') }}">
+                                    <i class="bi bi-shield-check"></i>
+                                    Admin Panel
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="alert('Help documentation coming soon!')">
+                                    <i class="bi bi-question-circle"></i>
+                                    Help & Support
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                    Sign Out
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
             
             <!-- Messages Area -->

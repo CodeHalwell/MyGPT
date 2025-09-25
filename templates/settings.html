@@ -1,56 +1,660 @@
 {% extends "saas_base.html" %}
 
+{% block title %}Settings - AI Assistant Pro{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="text-center">User Settings</h3>
+<div class="settings-layout">
+    <!-- Settings Navigation Sidebar -->
+    <div class="settings-sidebar">
+        <div class="settings-nav">
+            <div class="settings-nav-header">
+                <h3>Settings</h3>
+                <a href="{{ url_for('index') }}" class="back-to-app">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to App
+                </a>
             </div>
-            <div class="card-body">
-                {% if success_message %}
-                <div class="alert alert-success">{{ success_message }}</div>
+            
+            <div class="settings-nav-menu">
+                <a href="#profile" class="settings-nav-item active" data-section="profile">
+                    <i class="bi bi-person-circle"></i>
+                    Profile & Account
+                </a>
+                <a href="#preferences" class="settings-nav-item" data-section="preferences">
+                    <i class="bi bi-sliders"></i>
+                    Preferences
+                </a>
+                <a href="#api-keys" class="settings-nav-item" data-section="api-keys">
+                    <i class="bi bi-key"></i>
+                    API Keys
+                </a>
+                <a href="#appearance" class="settings-nav-item" data-section="appearance">
+                    <i class="bi bi-palette"></i>
+                    Appearance
+                </a>
+                <a href="#security" class="settings-nav-item" data-section="security">
+                    <i class="bi bi-shield-check"></i>
+                    Security
+                </a>
+                <a href="#notifications" class="settings-nav-item" data-section="notifications">
+                    <i class="bi bi-bell"></i>
+                    Notifications
+                </a>
+                <a href="#data" class="settings-nav-item" data-section="data">
+                    <i class="bi bi-download"></i>
+                    Data & Privacy
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Main Content -->
+    <div class="settings-main">
+        <div class="settings-content">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
                 {% endif %}
-                
-                <form method="POST" action="{{ url_for('update_username') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <h4 class="mb-3">Change Username</h4>
-                    <div class="mb-3">
-                        <label for="new_username" class="form-label">New Username</label>
-                        <input type="text" class="form-control" id="new_username" name="new_username" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="current_password_username" class="form-label">Current Password</label>
-                        <input type="password" class="form-control" id="current_password_username" name="current_password" required>
-                    </div>
-                    <div class="d-grid mb-4">
-                        <button type="submit" class="btn btn-primary">Update Username</button>
-                    </div>
-                </form>
+            {% endwith %}
 
-                <hr class="my-4">
+            <!-- Profile & Account Section -->
+            <div id="profile-section" class="settings-section active">
+                <div class="settings-section-header">
+                    <h2>Profile & Account</h2>
+                    <p>Manage your account information and credentials</p>
+                </div>
 
-                <form method="POST" action="{{ url_for('update_password') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <h4 class="mb-3">Change Password</h4>
-                    <div class="mb-3">
-                        <label for="current_password" class="form-label">Current Password</label>
-                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                <div class="settings-cards">
+                    <!-- User Info Card -->
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <div class="settings-card-icon">
+                                <i class="bi bi-person"></i>
+                            </div>
+                            <div>
+                                <h3>Account Information</h3>
+                                <p>Your basic account details</p>
+                            </div>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <label>Username</label>
+                                    <span>{{ current_user.username }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Email</label>
+                                    <span>{{ current_user.email }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Account Type</label>
+                                    <span class="badge badge-{{ 'admin' if current_user.is_admin else 'user' }}">
+                                        {{ 'Administrator' if current_user.is_admin else 'Standard User' }}
+                                    </span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Status</label>
+                                    <span class="badge badge-{{ 'success' if current_user.is_approved else 'warning' }}">
+                                        {{ 'Active' if current_user.is_approved else 'Pending Approval' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="new_password" class="form-label">New Password</label>
-                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+
+                    <!-- Change Username Card -->
+                    <div class="settings-card">
+                        <form method="POST" action="{{ url_for('update_username') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <div class="settings-card-header">
+                                <div class="settings-card-icon">
+                                    <i class="bi bi-pencil"></i>
+                                </div>
+                                <div>
+                                    <h3>Change Username</h3>
+                                    <p>Update your display name</p>
+                                </div>
+                            </div>
+                            <div class="settings-card-body">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="new_username" class="form-label">New Username</label>
+                                        <input type="text" class="form-control" id="new_username" name="new_username" 
+                                               placeholder="Enter new username" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="current_password_username" class="form-label">Current Password</label>
+                                        <input type="password" class="form-control" id="current_password_username" 
+                                               name="current_password" placeholder="Confirm with password" required>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check-lg"></i>
+                                        Update Username
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                    <div class="mb-3">
-                        <label for="confirm_password" class="form-label">Confirm New Password</label>
-                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+
+                    <!-- Change Password Card -->
+                    <div class="settings-card">
+                        <form method="POST" action="{{ url_for('update_password') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <div class="settings-card-header">
+                                <div class="settings-card-icon">
+                                    <i class="bi bi-shield-lock"></i>
+                                </div>
+                                <div>
+                                    <h3>Change Password</h3>
+                                    <p>Update your account password</p>
+                                </div>
+                            </div>
+                            <div class="settings-card-body">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="current_password" class="form-label">Current Password</label>
+                                        <input type="password" class="form-control" id="current_password" 
+                                               name="current_password" placeholder="Enter current password" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="new_password" class="form-label">New Password</label>
+                                        <input type="password" class="form-control" id="new_password" 
+                                               name="new_password" placeholder="Enter new password" required>
+                                        <div class="form-help">At least 8 characters with mixed case, numbers, and symbols</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="confirm_password" class="form-label">Confirm New Password</label>
+                                        <input type="password" class="form-control" id="confirm_password" 
+                                               name="confirm_password" placeholder="Confirm new password" required>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-shield-check"></i>
+                                        Update Password
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Update Password</button>
+                </div>
+            </div>
+
+            <!-- Preferences Section -->
+            <div id="preferences-section" class="settings-section">
+                <div class="settings-section-header">
+                    <h2>Preferences</h2>
+                    <p>Customize your AI assistant experience</p>
+                </div>
+
+                <div class="settings-cards">
+                    <!-- Chat Preferences -->
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <div class="settings-card-icon">
+                                <i class="bi bi-chat-dots"></i>
+                            </div>
+                            <div>
+                                <h3>Chat Preferences</h3>
+                                <p>Configure your chat experience</p>
+                            </div>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <label>Default AI Model</label>
+                                    <p>Choose your preferred AI model for new conversations</p>
+                                </div>
+                                <select class="form-select">
+                                    <option value="gpt-4o">GPT-4o (Recommended)</option>
+                                    <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
+                                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                                </select>
+                            </div>
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <label>Message History</label>
+                                    <p>How many previous messages to include for context</p>
+                                </div>
+                                <select class="form-select">
+                                    <option value="10">Last 10 messages</option>
+                                    <option value="20" selected>Last 20 messages</option>
+                                    <option value="50">Last 50 messages</option>
+                                    <option value="-1">All messages</option>
+                                </select>
+                            </div>
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <label>Auto-save Conversations</label>
+                                    <p>Automatically save conversations as you chat</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="autosave" checked>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </form>
+
+                    <!-- Language & Region -->
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <div class="settings-card-icon">
+                                <i class="bi bi-globe"></i>
+                            </div>
+                            <div>
+                                <h3>Language & Region</h3>
+                                <p>Set your language and regional preferences</p>
+                            </div>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <label>Interface Language</label>
+                                    <p>Language for the user interface</p>
+                                </div>
+                                <select class="form-select">
+                                    <option value="en" selected>English</option>
+                                    <option value="es">Español</option>
+                                    <option value="fr">Français</option>
+                                    <option value="de">Deutsch</option>
+                                    <option value="ja">日本語</option>
+                                </select>
+                            </div>
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <label>Time Zone</label>
+                                    <p>Your local time zone for timestamps</p>
+                                </div>
+                                <select class="form-select">
+                                    <option value="UTC" selected>UTC (Coordinated Universal Time)</option>
+                                    <option value="America/New_York">Eastern Time (US & Canada)</option>
+                                    <option value="America/Chicago">Central Time (US & Canada)</option>
+                                    <option value="America/Los_Angeles">Pacific Time (US & Canada)</option>
+                                    <option value="Europe/London">London</option>
+                                    <option value="Europe/Paris">Paris</option>
+                                    <option value="Asia/Tokyo">Tokyo</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Keys Section -->
+            <div id="api-keys-section" class="settings-section">
+                <div class="settings-section-header">
+                    <h2>API Keys</h2>
+                    <p>Manage your API keys for various AI services</p>
+                </div>
+
+                <div class="settings-cards">
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <div class="settings-card-icon">
+                                <i class="bi bi-key"></i>
+                            </div>
+                            <div>
+                                <h3>AI Service Keys</h3>
+                                <p>Configure your personal API keys</p>
+                            </div>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="api-key-item">
+                                <div class="api-key-info">
+                                    <img src="https://cdn.openai.com/API/logo-assets/powered-by-openai.svg" alt="OpenAI" class="api-logo">
+                                    <div>
+                                        <label>OpenAI API Key</label>
+                                        <p>For GPT-4, GPT-3.5, and DALL-E models</p>
+                                    </div>
+                                </div>
+                                <div class="api-key-input">
+                                    <input type="password" class="form-control" placeholder="sk-..." value="••••••••••••••••">
+                                    <button type="button" class="btn btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="api-key-item">
+                                <div class="api-key-info">
+                                    <div class="api-logo-text">Anthropic</div>
+                                    <div>
+                                        <label>Anthropic API Key</label>
+                                        <p>For Claude models</p>
+                                    </div>
+                                </div>
+                                <div class="api-key-input">
+                                    <input type="password" class="form-control" placeholder="sk-ant-...">
+                                    <button type="button" class="btn btn-outline-secondary">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="api-key-item">
+                                <div class="api-key-info">
+                                    <div class="api-logo-text">Google</div>
+                                    <div>
+                                        <label>Google API Key</label>
+                                        <p>For Gemini models</p>
+                                    </div>
+                                </div>
+                                <div class="api-key-input">
+                                    <input type="password" class="form-control" placeholder="AIza...">
+                                    <button type="button" class="btn btn-outline-secondary">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appearance Section -->
+            <div id="appearance-section" class="settings-section">
+                <div class="settings-section-header">
+                    <h2>Appearance</h2>
+                    <p>Customize the look and feel of your interface</p>
+                </div>
+
+                <div class="settings-cards">
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <div class="settings-card-icon">
+                                <i class="bi bi-palette"></i>
+                            </div>
+                            <div>
+                                <h3>Theme & Display</h3>
+                                <p>Choose your preferred theme and display options</p>
+                            </div>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="theme-selector">
+                                <label>Theme</label>
+                                <div class="theme-options">
+                                    <div class="theme-option active" data-theme="dark">
+                                        <div class="theme-preview theme-dark"></div>
+                                        <span>Dark</span>
+                                    </div>
+                                    <div class="theme-option" data-theme="light">
+                                        <div class="theme-preview theme-light"></div>
+                                        <span>Light</span>
+                                    </div>
+                                    <div class="theme-option" data-theme="auto">
+                                        <div class="theme-preview theme-auto"></div>
+                                        <span>Auto</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <label>Sidebar Position</label>
+                                    <p>Choose where to position the navigation sidebar</p>
+                                </div>
+                                <div class="btn-group" role="group">
+                                    <input type="radio" class="btn-check" name="sidebar" id="sidebar-left" checked>
+                                    <label class="btn btn-outline-primary" for="sidebar-left">Left</label>
+                                    <input type="radio" class="btn-check" name="sidebar" id="sidebar-right">
+                                    <label class="btn btn-outline-primary" for="sidebar-right">Right</label>
+                                </div>
+                            </div>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <label>Animations</label>
+                                    <p>Enable smooth animations and transitions</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="animations" checked>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Section -->
+            <div id="security-section" class="settings-section">
+                <div class="settings-section-header">
+                    <h2>Security</h2>
+                    <p>Manage your account security and privacy settings</p>
+                </div>
+
+                <div class="settings-cards">
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <div class="settings-card-icon">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <div>
+                                <h3>Account Security</h3>
+                                <p>Protect your account with additional security measures</p>
+                            </div>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="security-item">
+                                <div class="security-info">
+                                    <label>Two-Factor Authentication</label>
+                                    <p>Add an extra layer of security to your account</p>
+                                </div>
+                                <button class="btn btn-outline-primary">
+                                    <i class="bi bi-plus-lg"></i>
+                                    Enable 2FA
+                                </button>
+                            </div>
+                            
+                            <div class="security-item">
+                                <div class="security-info">
+                                    <label>Session Management</label>
+                                    <p>View and manage your active sessions</p>
+                                </div>
+                                <button class="btn btn-outline-secondary">
+                                    <i class="bi bi-list"></i>
+                                    View Sessions
+                                </button>
+                            </div>
+                            
+                            <div class="security-item">
+                                <div class="security-info">
+                                    <label>Login History</label>
+                                    <p>Review recent login activity</p>
+                                </div>
+                                <button class="btn btn-outline-secondary">
+                                    <i class="bi bi-clock-history"></i>
+                                    View History
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications Section -->
+            <div id="notifications-section" class="settings-section">
+                <div class="settings-section-header">
+                    <h2>Notifications</h2>
+                    <p>Control how and when you receive notifications</p>
+                </div>
+
+                <div class="settings-cards">
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <div class="settings-card-icon">
+                                <i class="bi bi-bell"></i>
+                            </div>
+                            <div>
+                                <h3>Notification Preferences</h3>
+                                <p>Choose what notifications you want to receive</p>
+                            </div>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <label>Email Notifications</label>
+                                    <p>Receive updates via email</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="email-notifications" checked>
+                                </div>
+                            </div>
+                            
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <label>Chat Summaries</label>
+                                    <p>Weekly summary of your conversations</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="chat-summaries">
+                                </div>
+                            </div>
+                            
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <label>Feature Updates</label>
+                                    <p>Get notified about new features and improvements</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="feature-updates" checked>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data & Privacy Section -->
+            <div id="data-section" class="settings-section">
+                <div class="settings-section-header">
+                    <h2>Data & Privacy</h2>
+                    <p>Manage your data and privacy preferences</p>
+                </div>
+
+                <div class="settings-cards">
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <div class="settings-card-icon">
+                                <i class="bi bi-download"></i>
+                            </div>
+                            <div>
+                                <h3>Data Export</h3>
+                                <p>Download your data and conversation history</p>
+                            </div>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="data-item">
+                                <div class="data-info">
+                                    <label>Export Chat History</label>
+                                    <p>Download all your conversations as JSON or CSV</p>
+                                </div>
+                                <button class="btn btn-primary">
+                                    <i class="bi bi-download"></i>
+                                    Export Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card danger">
+                        <div class="settings-card-header">
+                            <div class="settings-card-icon danger">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </div>
+                            <div>
+                                <h3>Danger Zone</h3>
+                                <p>Irreversible actions that affect your account</p>
+                            </div>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="danger-item">
+                                <div class="danger-info">
+                                    <label>Delete All Chat History</label>
+                                    <p>Permanently delete all your conversations</p>
+                                </div>
+                                <button class="btn btn-outline-danger">
+                                    <i class="bi bi-trash3"></i>
+                                    Delete History
+                                </button>
+                            </div>
+                            
+                            <div class="danger-item">
+                                <div class="danger-info">
+                                    <label>Delete Account</label>
+                                    <p>Permanently delete your account and all data</p>
+                                </div>
+                                <button class="btn btn-danger">
+                                    <i class="bi bi-person-x"></i>
+                                    Delete Account
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Settings Navigation
+document.querySelectorAll('.settings-nav-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        // Remove active class from all nav items and sections
+        document.querySelectorAll('.settings-nav-item').forEach(nav => nav.classList.remove('active'));
+        document.querySelectorAll('.settings-section').forEach(section => section.classList.remove('active'));
+        
+        // Add active class to clicked nav item
+        item.classList.add('active');
+        
+        // Show corresponding section
+        const sectionId = item.dataset.section + '-section';
+        document.getElementById(sectionId).classList.add('active');
+        
+        // Update URL hash
+        window.location.hash = item.dataset.section;
+    });
+});
+
+// Handle URL hash on page load
+window.addEventListener('load', () => {
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+        const navItem = document.querySelector(`[data-section="${hash}"]`);
+        if (navItem) {
+            navItem.click();
+        }
+    }
+});
+
+// Theme selector
+document.querySelectorAll('.theme-option').forEach(option => {
+    option.addEventListener('click', () => {
+        document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('active'));
+        option.classList.add('active');
+        
+        const theme = option.dataset.theme;
+        // Apply theme logic here
+        console.log('Theme changed to:', theme);
+    });
+});
+</script>
 {% endblock %}

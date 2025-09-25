@@ -1,59 +1,32 @@
-{% extends "saas_base.html" %}
+/* ===== AUTHENTICATION PAGES STYLING ===== */
 
-{% block title %}Set New Password - AI Assistant Pro{% endblock %}
+/* Complete CSS Reset for Auth Pages */
+html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
 
-{% block content %}
-<div class="auth-container">
-    <div class="auth-card">
-        <div class="auth-header">
-            <div class="auth-brand">
-                <div class="brand-icon">
-                    <i class="bi bi-shield-check"></i>
-                </div>
-                <h1 class="auth-title">Set New Password</h1>
-                <p class="auth-subtitle">Create a strong password for your account</p>
-            </div>
-        </div>
-        
-        <div class="auth-body">
-            <form method="POST" class="auth-form">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <div class="form-group">
-                    <label for="password" class="form-label">New Password</label>
-                    <input type="password" class="form-control auth-input" id="password" name="password" placeholder="Enter a strong password" required>
-                </div>
-                
-                <button type="submit" class="auth-submit-btn">
-                    <span>Update Password</span>
-                    <i class="bi bi-arrow-right"></i>
-                </button>
-            </form>
-            
-            <div class="auth-footer">
-                <p class="auth-link">
-                    Remember your password? 
-                    <a href="{{ url_for('login') }}" class="auth-link-accent">Sign in</a>
-                </p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="auth-background">
-        <div class="auth-bg-gradient"></div>
-    </div>
-</div>
-{% endblock %}
+/* Auth Page Body Override */
+body {
+    overflow: hidden !important;
+}
 
-{% block extra_css %}
-<style>
+/* Auth Container and Background */
 .auth-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    height: 100vh;
+    width: 100vw;
     padding: 2rem;
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
     background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    z-index: 9999;
+    margin: 0;
+    box-sizing: border-box;
 }
 
 .auth-background {
@@ -83,6 +56,7 @@
     50% { transform: scale(1.1) rotate(180deg); }
 }
 
+/* Auth Card */
 .auth-card {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -96,6 +70,7 @@
     z-index: 1;
 }
 
+/* Auth Header */
 .auth-header {
     text-align: center;
     margin-bottom: 2.5rem;
@@ -115,6 +90,17 @@
     box-shadow: 0 8px 32px rgba(68, 133, 244, 0.3);
 }
 
+/* Special brand icon colors for different pages */
+.auth-brand .brand-icon.warning {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    box-shadow: 0 8px 32px rgba(245, 158, 11, 0.3);
+}
+
+.auth-brand .brand-icon.success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
+}
+
 .auth-title {
     color: rgba(255, 255, 255, 0.95);
     font-size: 32px;
@@ -131,6 +117,38 @@
     font-size: 16px;
     margin: 0;
     line-height: 1.5;
+}
+
+/* Auth Body */
+.auth-body {
+    width: 100%;
+}
+
+/* Auth Notice */
+.auth-notice {
+    background: rgba(68, 133, 244, 0.1);
+    border: 1px solid rgba(68, 133, 244, 0.3);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 2rem;
+}
+
+.notice-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(68, 133, 244, 0.9);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.notice-content i {
+    font-size: 16px;
+}
+
+/* Auth Form */
+.auth-form {
+    width: 100%;
 }
 
 .auth-form .form-group {
@@ -182,18 +200,22 @@
     gap: 8px;
     transition: all 0.3s ease;
     margin-top: 1rem;
+    text-decoration: none;
+    cursor: pointer;
 }
 
 .auth-submit-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 12px 28px rgba(68, 133, 244, 0.3);
     color: white;
+    text-decoration: none;
 }
 
 .auth-submit-btn:active {
     transform: translateY(0);
 }
 
+/* Auth Footer */
 .auth-footer {
     text-align: center;
     margin-top: 2rem;
@@ -219,6 +241,44 @@
     text-decoration: none;
 }
 
+/* Status Message (for pending approval page) */
+.status-message {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.status-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: white;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
+}
+
+.status-title {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+}
+
+.status-text {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.status-actions {
+    text-align: center;
+}
+
 /* Hide main SaaS navigation on auth pages */
 .saas-navbar,
 .saas-sidebar,
@@ -231,6 +291,7 @@
     margin-left: 0 !important;
 }
 
+/* Responsive Design */
 @media (max-width: 768px) {
     .auth-container {
         padding: 1rem;
@@ -238,11 +299,27 @@
     
     .auth-card {
         padding: 2rem 1.5rem;
+        max-width: 440px;
     }
     
     .auth-title {
         font-size: 28px;
     }
+    
+    .status-title {
+        font-size: 22px;
+    }
+    
+    .status-text {
+        font-size: 15px;
+    }
 }
-</style>
-{% endblock %}
+
+/* Ensure auth pages override any conflicting styles */
+.auth-container * {
+    box-sizing: border-box;
+}
+
+.auth-container body {
+    overflow: visible !important;
+}

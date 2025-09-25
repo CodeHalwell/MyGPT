@@ -1,21 +1,232 @@
-{% extends "base.html" %}
+{% extends "saas_base.html" %}
+
+{% block title %}Registration Pending - AI Assistant Pro{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="text-center">Registration Pending</h3>
-            </div>
-            <div class="card-body text-center">
-                <div class="mb-4">
-                    <i class="bi bi-hourglass-split display-1 text-warning"></i>
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-brand">
+                <div class="brand-icon">
+                    <i class="bi bi-hourglass-split"></i>
                 </div>
-                <h4 class="mb-3">Thank You for Registering!</h4>
-                <p class="mb-4">Your registration is pending administrator approval. You will be able to access the system once your account has been approved.</p>
-                <a href="{{ url_for('login') }}" class="btn btn-primary">Return to Login</a>
+                <h1 class="auth-title">Registration Pending</h1>
+                <p class="auth-subtitle">Your account is awaiting administrator approval</p>
+            </div>
+        </div>
+        
+        <div class="auth-body">
+            <div class="status-message">
+                <div class="status-icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <h3 class="status-title">Thank You for Registering!</h3>
+                <p class="status-text">
+                    Your registration has been successfully submitted. You will receive an email notification 
+                    once your account has been approved by an administrator.
+                </p>
+            </div>
+            
+            <div class="status-actions">
+                <a href="{{ url_for('login') }}" class="auth-submit-btn">
+                    <span>Return to Login</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
             </div>
         </div>
     </div>
+    
+    <div class="auth-background">
+        <div class="auth-bg-gradient"></div>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.auth-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    position: relative;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+}
+
+.auth-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.auth-bg-gradient {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    right: -50%;
+    bottom: -50%;
+    background: radial-gradient(circle at 30% 20%, rgba(68, 133, 244, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(52, 168, 83, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 90%, rgba(251, 188, 4, 0.1) 0%, transparent 50%);
+    animation: authGlow 20s ease-in-out infinite;
+}
+
+@keyframes authGlow {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.1) rotate(180deg); }
+}
+
+.auth-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    padding: 3rem;
+    width: 100%;
+    max-width: 500px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.auth-brand .brand-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 8px 32px rgba(245, 158, 11, 0.3);
+}
+
+.auth-title {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    background: linear-gradient(135deg, #ffffff, #e0e0e0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.auth-subtitle {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.status-message {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.status-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: white;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
+}
+
+.status-title {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+}
+
+.status-text {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.status-actions {
+    text-align: center;
+}
+
+.auth-submit-btn {
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    border: none;
+    border-radius: 12px;
+    padding: 14px 24px;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.auth-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(68, 133, 244, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.auth-submit-btn:active {
+    transform: translateY(0);
+}
+
+/* Hide main SaaS navigation on auth pages */
+.saas-navbar,
+.saas-sidebar,
+.saas-footer {
+    display: none !important;
+}
+
+/* Adjust main content for auth pages */
+.saas-app .saas-main {
+    margin-left: 0 !important;
+}
+
+@media (max-width: 768px) {
+    .auth-container {
+        padding: 1rem;
+    }
+    
+    .auth-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .auth-title {
+        font-size: 28px;
+    }
+    
+    .status-title {
+        font-size: 22px;
+    }
+    
+    .status-text {
+        font-size: 15px;
+    }
+}
+</style>
 {% endblock %}

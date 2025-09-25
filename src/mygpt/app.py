@@ -22,11 +22,20 @@ db = SQLAlchemy(model_class=Base)
 login_manager = LoginManager()
 csrf = CSRFProtect()
 
-def create_app():
-    app = Flask(__name__)
+def create_app(config_name=None):
+    """Application factory pattern"""
+    app = Flask(__name__, 
+                static_folder=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'static'),
+                template_folder=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'templates'))
+    
+    # Load configuration
+    if config_name is None:
+        config_name = os.environ.get('FLASK_ENV', 'development')
+    
+    from .config.settings import config
+    app.config.from_object(config[config_name])
     
     # Configure static files with absolute path
-    app.static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
     app.static_url_path = '/static'
     
     # Configure WhiteNoise for production static file serving
@@ -41,39 +50,6 @@ def create_app():
     
     # Add ProxyFix middleware for proper header handling behind Replit's proxy
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
-    
-    # Production configurations
-    app.secret_key = os.environ.get("FLASK_SECRET_KEY") or os.urandom(24)
-    database_url = os.environ.get("DATABASE_URL")
-    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
-    
-    # Configure engine options based on database type
-    if database_url and 'sqlite' in database_url:
-        # SQLite configuration
-        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-            "pool_pre_ping": True,
-        }
-    else:
-        # PostgreSQL configuration
-        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-            "pool_recycle": 300,
-            "pool_pre_ping": True,
-            "pool_size": 10,
-            "max_overflow": 20,
-            "pool_timeout": 30
-        }
-    
-    app.config['ADMIN_USERNAME'] = os.environ.get('ADMIN_USERNAME', 'codhe')
-    app.config['ADMIN_EMAIL'] = os.environ.get('ADMIN_EMAIL', 'danielhalwell@gmail.com')
-    
-    # Security settings (adjust for development vs production)
-    is_production = os.environ.get('REPLIT_DEPLOYMENT') == 'production'
-    app.config['SESSION_COOKIE_SECURE'] = is_production  # Only require HTTPS in production
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
-    app.config['REMEMBER_COOKIE_DURATION'] = 2592000  # 30 days
-    app.config['REMEMBER_COOKIE_SECURE'] = is_production  # Only require HTTPS in production
-    app.config['REMEMBER_COOKIE_HTTPONLY'] = True
 
     # Initialize extensions
     try:
@@ -88,7 +64,7 @@ def create_app():
 
     with app.app_context():
         try:
-            import models
+            from . import models
             db.create_all()
             logger.info("Database tables created successfully")
         except Exception as e:
@@ -96,5 +72,3 @@ def create_app():
             raise
 
     return app
-
-app = create_app()

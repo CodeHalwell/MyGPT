@@ -4,7 +4,7 @@ Provides comprehensive data validation, serialization, and security.
 """
 
 from marshmallow import Schema, fields, validate, validates, ValidationError
-from models import User, Tag
+from ..models import User, Tag
 import re
 
 

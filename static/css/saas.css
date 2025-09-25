@@ -1129,3 +1129,219 @@ body:has(.modern-chat-layout) .saas-footer {
         padding: 20px;
     }
 }
+
+/* ===== CHAT USER MENU STYLES ===== */
+
+/* Chat Header Updates */
+.modern-chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 2rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.chat-header-content {
+    flex: 1;
+}
+
+.chat-user-menu .dropdown-toggle::after {
+    display: none;
+}
+
+.user-menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    color: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.user-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 1);
+}
+
+.user-menu-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(68, 133, 244, 0.2);
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.125rem;
+}
+
+.user-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.user-role {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.2;
+}
+
+.dropdown-arrow {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    transition: transform 0.3s ease;
+}
+
+.user-menu-btn[aria-expanded="true"] .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+/* User Dropdown Menu */
+.user-dropdown {
+    background: rgba(26, 26, 26, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4) !important;
+    padding: 0.5rem 0 !important;
+    margin-top: 0.5rem !important;
+    min-width: 280px !important;
+}
+
+.user-dropdown .dropdown-header {
+    padding: 1rem 1.5rem !important;
+    margin-bottom: 0 !important;
+    border-bottom: none !important;
+}
+
+.user-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-avatar-large {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.user-details strong {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.user-details small {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8rem;
+}
+
+.user-dropdown .dropdown-divider {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    margin: 0.5rem 0 !important;
+}
+
+.user-dropdown .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+    border-radius: 0 !important;
+}
+
+.user-dropdown .dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.user-dropdown .dropdown-item.text-danger {
+    color: rgba(220, 53, 69, 0.8) !important;
+}
+
+.user-dropdown .dropdown-item.text-danger:hover {
+    background: rgba(220, 53, 69, 0.1) !important;
+    color: rgba(220, 53, 69, 1) !important;
+}
+
+.user-dropdown .dropdown-item i {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* Badge Styles for User Menu */
+.user-dropdown .badge-admin {
+    background: rgba(220, 53, 69, 0.2);
+    color: #ff6b7a;
+    padding: 0.125rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+/* Responsive User Menu */
+@media (max-width: 768px) {
+    .modern-chat-header {
+        padding: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .chat-header-content {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .user-menu-btn {
+        padding: 0.5rem 0.75rem;
+        gap: 0.5rem;
+    }
+    
+    .user-info {
+        display: none;
+    }
+    
+    .user-dropdown {
+        min-width: 240px !important;
+        right: 0 !important;
+        left: auto !important;
+    }
+}

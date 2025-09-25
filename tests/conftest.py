@@ -5,13 +5,21 @@ Provides shared fixtures for all tests.
 import pytest
 import tempfile
 import os
+import sys
+from pathlib import Path
+
+# Add src directory to path
+current_dir = Path(__file__).parent
+src_dir = current_dir.parent / "src"
+sys.path.insert(0, str(src_dir))
 
 # Set testing environment variables before importing app
 os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
 os.environ['FLASK_SECRET_KEY'] = 'test-secret-key'
+os.environ['FLASK_ENV'] = 'testing'
 
-from app import create_app, db
-from models import User, Chat, Message, Tag
+from mygpt.app import create_app, db
+from mygpt.models import User, Chat, Message, Tag
 
 
 @pytest.fixture
@@ -20,20 +28,13 @@ def app():
     # Create a temporary file to serve as the database
     db_fd, db_path = tempfile.mkstemp()
     
-    # Override configuration for testing
-    test_config = {
-        'TESTING': True,
-        'SQLALCHEMY_DATABASE_URI': f'sqlite:///{db_path}',
-        'SECRET_KEY': 'test-secret-key',
-        'WTF_CSRF_ENABLED': False,
-        'LOGIN_DISABLED': True,
-        'SESSION_COOKIE_SECURE': False,
-        'REMEMBER_COOKIE_SECURE': False,
-    }
-    
     # Create app with test config
-    app = create_app()
-    app.config.update(test_config)
+    app = create_app('testing')
+    
+    # Override any additional test settings
+    app.config.update({
+        'SQLALCHEMY_DATABASE_URI': f'sqlite:///{db_path}',
+    })
     
     with app.app_context():
         db.create_all()

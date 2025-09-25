@@ -84,3 +84,5 @@ test*.db
 *.tmp
 *.temp
 __pycache__/
+LICENSE
+.mypy_cache/
