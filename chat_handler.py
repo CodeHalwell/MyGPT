@@ -1,7 +1,12 @@
 import os
+from typing import Dict, Iterator, List, Set
+
 from openai import OpenAI
-from typing import Iterator, List, Dict, Set
-from openai.types.chat import ChatCompletionMessage, ChatCompletionMessageParam, ChatCompletionSystemMessageParam
+from openai.types.chat import (
+    ChatCompletionMessage,
+    ChatCompletionMessageParam,
+    ChatCompletionSystemMessageParam,
+)
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 try:
@@ -26,34 +31,30 @@ MODEL_MAPPING = {
     "gpt-4o-mini": "gpt-3.5-turbo",
     "gpt-4": "gpt-4",
     "gpt-4-turbo": "gpt-4-1106-preview",
-    "gpt-3.5-turbo": "gpt-3.5-turbo"
+    "gpt-3.5-turbo": "gpt-3.5-turbo",
 }
 
 
-def get_ai_response_stream(messages: List[Dict[str, str]],
-                           model: str = "gpt-4o") -> Iterator[str]:
+def get_ai_response_stream(
+    messages: List[Dict[str, str]], model: str = "gpt-4o"
+) -> Iterator[str]:
     if not openai_client:
         # Fallback response when OpenAI client is not available
         fallback_message = "I apologize, but the AI service is currently unavailable. Please check your OpenAI API key and try again later."
         for char in fallback_message:
             yield char
         return
-    
+
     # Map the model name to the actual OpenAI model
     actual_model = MODEL_MAPPING.get(model, "gpt-4o")
 
-    formatted_messages: List[ChatCompletionMessageParam] = [{
-        "role":
-        m["role"],
-        "content":
-        m["content"]
-    } for m in messages]
+    formatted_messages: List[ChatCompletionMessageParam] = [
+        {"role": m["role"], "content": m["content"]} for m in messages
+    ]
 
     system_message: ChatCompletionSystemMessageParam = {
-        "role":
-        "system",
-        "content":
-        '''You are a helpful assistant that answers generally queries to the user. You will help with with whatever you need to help with. You will answer in a way that is friendly and helpful. Should you be asked to write code;
+        "role": "system",
+        "content": """You are a helpful assistant that answers generally queries to the user. You will help with with whatever you need to help with. You will answer in a way that is friendly and helpful. Should you be asked to write code;
         
         write clean, well-formatted code. When providing code examples:
 1. Always start with triple backticks and the language name on its own line
@@ -68,12 +69,13 @@ def example():
     pass
 ```
 
-Never put code on the same line as the backticks or language specification.'''
+Never put code on the same line as the backticks or language specification.""",
     }
     formatted_messages.insert(0, system_message)
 
     response = openai_client.chat.completions.create(
-        model=actual_model, messages=formatted_messages, stream=True)
+        model=actual_model, messages=formatted_messages, stream=True
+    )
 
     buffer = ""
 
@@ -105,31 +107,28 @@ Never put code on the same line as the backticks or language specification.'''
                     yield buffer[:start]
 
                 # Yield the code block
-                code_block = buffer[start:end + 3]
+                code_block = buffer[start : end + 3]
                 yield code_block
 
                 # Keep the rest in the buffer
-                buffer = buffer[end + 3:]
+                buffer = buffer[end + 3 :]
 
 
-def get_ai_response(messages: List[Dict[str, str]],
-                    model: str = "gpt-4o") -> str:
+def get_ai_response(messages: List[Dict[str, str]], model: str = "gpt-4o") -> str:
     if not openai_client:
         return "AI service is currently unavailable. Please check your API keys."
-    
+
     # Map the model name to the actual OpenAI model
     actual_model = MODEL_MAPPING.get(model, "gpt-4o")
 
-    formatted_messages: List[ChatCompletionMessageParam] = [{
-        "role":
-        m["role"],
-        "content":
-        m["content"]
-    } for m in messages]
+    formatted_messages: List[ChatCompletionMessageParam] = [
+        {"role": m["role"], "content": m["content"]} for m in messages
+    ]
 
     try:
         response = openai_client.chat.completions.create(
-            model=actual_model, messages=formatted_messages)
+            model=actual_model, messages=formatted_messages
+        )
         return response.choices[0].message.content or ""
     except Exception as e:
         print(f"Error in get_ai_response: {e}")
@@ -139,7 +138,7 @@ def get_ai_response(messages: List[Dict[str, str]],
 def generate_chat_summary(messages: List[Dict[str, str]]) -> str:
     if not messages:
         return "New Chat"
-    
+
     if not openai_client:
         # Fallback to simple summary when OpenAI client is not available
         first_message = next((m for m in messages if m["role"] == "user"), None)
@@ -148,23 +147,19 @@ def generate_chat_summary(messages: List[Dict[str, str]]) -> str:
             return content + "..." if len(first_message["content"]) > 40 else content
         return "New Chat"
 
-    formatted_messages: List[ChatCompletionMessageParam] = [{
-        "role":
-        m["role"],
-        "content":
-        m["content"]
-    } for m in messages]
+    formatted_messages: List[ChatCompletionMessageParam] = [
+        {"role": m["role"], "content": m["content"]} for m in messages
+    ]
 
     summary_prompt: ChatCompletionSystemMessageParam = {
-        "role":
-        "system",
-        "content":
-        "Please provide a brief summary (max 50 characters) of the following conversation. Focus on the main topic or question being discussed."
+        "role": "system",
+        "content": "Please provide a brief summary (max 50 characters) of the following conversation. Focus on the main topic or question being discussed.",
     }
 
     try:
         response = openai_client.chat.completions.create(
-            model="gpt-3.5-turbo", messages=[summary_prompt] + formatted_messages)
+            model="gpt-3.5-turbo", messages=[summary_prompt] + formatted_messages
+        )
         return response.choices[0].message.content or "New Chat"
     except Exception as e:
         print(f"Error generating chat summary: {e}")
@@ -180,12 +175,14 @@ def suggest_tags(messages: List[Dict[str, str]]) -> Set[str]:
     """Generate tag suggestions based on conversation content."""
     if not messages:
         return set()
-    
+
     if not openai_client:
         # Fallback to simple keyword-based tags when OpenAI client is not available
-        content = " ".join([m["content"].lower() for m in messages if m["role"] == "user"])
+        content = " ".join(
+            [m["content"].lower() for m in messages if m["role"] == "user"]
+        )
         fallback_tags = set()
-        
+
         # Simple keyword matching
         if "python" in content:
             fallback_tags.add("python")
@@ -197,44 +194,41 @@ def suggest_tags(messages: List[Dict[str, str]]) -> Set[str]:
             fallback_tags.add("data")
         if "web" in content or "website" in content:
             fallback_tags.add("web")
-        
+
         return fallback_tags if fallback_tags else {"general"}
 
-    formatted_messages: List[ChatCompletionMessageParam] = [{
-        "role":
-        m["role"],
-        "content":
-        m["content"]
-    } for m in messages]
+    formatted_messages: List[ChatCompletionMessageParam] = [
+        {"role": m["role"], "content": m["content"]} for m in messages
+    ]
 
     tag_prompt: ChatCompletionSystemMessageParam = {
-        "role":
-        "system",
-        "content":
-        """Analyze the conversation and suggest 1-3 relevant tags.
+        "role": "system",
+        "content": """Analyze the conversation and suggest 1-3 relevant tags.
 Rules for tags:
 1. Use lowercase letters only
 2. Use single words or hyphenated phrases
 3. Focus on technical topics, concepts, or programming languages
 4. Respond with tags only, separated by commas
-Example response: python, algorithms, data-structures"""
+Example response: python, algorithms, data-structures""",
     }
 
     try:
-        response = openai_client.chat.completions.create(model="gpt-3.5-turbo",
-                                                         messages=[tag_prompt] +
-                                                         formatted_messages)
+        response = openai_client.chat.completions.create(
+            model="gpt-3.5-turbo", messages=[tag_prompt] + formatted_messages
+        )
 
         if response.choices[0].message.content:
-            tags = response.choices[0].message.content.split(',')
+            tags = response.choices[0].message.content.split(",")
             return {tag.strip().lower() for tag in tags if tag.strip()}
         return {"general"}
     except Exception as e:
         print(f"Error generating tags: {e}")
         # Fallback to simple keyword-based tags
-        content = " ".join([m["content"].lower() for m in messages if m["role"] == "user"])
+        content = " ".join(
+            [m["content"].lower() for m in messages if m["role"] == "user"]
+        )
         fallback_tags = set()
-        
+
         if "python" in content:
             fallback_tags.add("python")
         if "javascript" in content or "js" in content:
@@ -245,5 +239,5 @@ Example response: python, algorithms, data-structures"""
             fallback_tags.add("data")
         if "web" in content or "website" in content:
             fallback_tags.add("web")
-        
+
         return fallback_tags if fallback_tags else {"general"}
