@@ -289,10 +289,14 @@ def init_routes(app):
             traceback.print_exc()
             return jsonify({'error': 'Failed to save message'}), 500
 
-    @csrf.exempt  # Temporarily exempt from CSRF
     @app.route('/chat/<int:chat_id>/message/stream')
     @login_required
     def stream_response(chat_id):
+        # Require a stream token for CSRF protection
+        stream_token = request.headers.get('X-STREAM-TOKEN') or request.args.get('stream_token')
+        session_token = getattr(current_user, 'stream_token', None)
+        if not stream_token or not session_token or stream_token != session_token:
+            return jsonify({'error': 'Invalid or missing stream token'}), 403
         chat = Chat.query.get_or_404(chat_id)
         # Temporarily skip authorization check
         # if chat.user_id != current_user.id:
