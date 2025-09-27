@@ -280,10 +280,10 @@ body {
 }
 
 /* Hide main SaaS navigation on auth pages */
-.saas-navbar,
-.saas-sidebar,
-.saas-footer {
-    display: none !important;
+body.auth-page .saas-navbar,
+body.auth-page .saas-sidebar,
+body.auth-page .saas-footer {
+    display: none;
 }
 
 /* Adjust main content for auth pages */
