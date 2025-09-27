@@ -67,7 +67,7 @@ app = create_application()
 # For production server
 if __name__ == "__main__":
     try:
-        port = int(os.environ.get("PORT", 5001))
+        port = int(os.environ.get("PORT", 5000))
         logger.info(f"Starting Flask production server on port {port}...")
         from waitress import serve
         serve(app, host="0.0.0.0", port=port, threads=6)
