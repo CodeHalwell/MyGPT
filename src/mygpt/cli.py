@@ -46,13 +46,15 @@ def main():
     app = create_app()
     init_routes(app)
     
-    if args.debug or args.env == 'development':
-        app.run(host=args.host, port=args.port, debug=True)
-    else:
+    if args.env == 'production':
+        if args.debug:
+            print("WARNING: --debug flag is ignored in production environment. Debug mode will be OFF.", file=sys.stderr)
         # Use Waitress for production
         from waitress import serve
         print(f"Starting MyGPT on {args.host}:{args.port}")
         serve(app, host=args.host, port=args.port)
+    else:
+        app.run(host=args.host, port=args.port, debug=args.debug)
 
 
 if __name__ == '__main__':
