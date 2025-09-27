@@ -345,7 +345,8 @@ def init_routes(app):
 
     @csrf.exempt  # Temporarily exempt from CSRF
     @app.route('/chat/<int:chat_id>/delete', methods=['POST'])
-    def delete_chat(chat_id):  # Temporarily removed @login_required
+    @login_required
+    def delete_chat(chat_id):
         chat = Chat.query.get_or_404(chat_id)
         # Temporarily skip authorization check
         # if chat.user_id != current_user.id and not current_user.is_admin:
