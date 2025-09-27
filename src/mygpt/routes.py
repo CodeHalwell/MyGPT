@@ -298,9 +298,9 @@ def init_routes(app):
         if not stream_token or not session_token or stream_token != session_token:
             return jsonify({'error': 'Invalid or missing stream token'}), 403
         chat = Chat.query.get_or_404(chat_id)
-        # Temporarily skip authorization check
-        # if chat.user_id != current_user.id:
-        #     return jsonify({'error': 'Unauthorized'}), 403
+        # Authorization check: only the chat owner or an admin can access
+        if chat.user_id != current_user.id and not current_user.is_admin:
+            return jsonify({'error': 'Unauthorized'}), 403
         
         # Get model directly from query parameters
         model = request.args.get('model', 'gpt-4o')
