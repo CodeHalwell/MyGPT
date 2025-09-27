@@ -347,7 +347,6 @@ def init_routes(app):
             return jsonify({'error': 'Unauthorized'}), 403
         return jsonify({'title': chat.title or 'New Chat'})
 
-    @csrf.exempt  # Temporarily exempt from CSRF
     @app.route('/chat/<int:chat_id>/delete', methods=['POST'])
     @login_required
     def delete_chat(chat_id):
