@@ -60,7 +60,7 @@ class DevelopmentConfig(BaseConfig):
     REMEMBER_COOKIE_HTTPONLY = True
     WTF_CSRF_SSL_STRICT = False
     WTF_CSRF_TIME_LIMIT = 7200  # 2 hours for development
-    WTF_CSRF_ENABLED = False  # Disable CSRF for development
+    WTF_CSRF_ENABLED = True
 
 
 class ProductionConfig(BaseConfig):
